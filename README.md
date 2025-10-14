@@ -65,3 +65,31 @@ com.example.kkarhua/
 │
 └── MainActivity.kt                  ✅ Activity principal
 ```
+## 🎨 Características Implementadas {#caracteristicas}
+
+### 1. 🎭 Animaciones (8 tipos)
+
+| Animación | Uso | Archivo |
+|-----------|-----|---------|
+| `fade_in.xml` | Entrada suave de elementos | Títulos, imágenes |
+| `fade_out.xml` | Salida suave | Transiciones |
+| `slide_up.xml` | Entrada desde abajo | Formularios, botones |
+| `slide_down.xml` | Salida hacia abajo | Modales |
+| `slide_in_left.xml` | Navegación | Transición de pantallas |
+| `slide_in_right.xml` | Navegación | Transición de pantallas |
+| `slide_out_left.xml` | Navegación | Transición de pantallas |
+| `slide_out_right.xml` | Navegación | Transición de pantallas |
+| `bounce.xml` | Feedback al tocar | Botones interactivos |
+| `item_animation_fall_down.xml` | RecyclerView items | Lista de productos |
+
+
+
+### 🎯 Cumplimiento de Requisitos:
+
+| Requisito | Cumplimiento | Evidencia |
+|-----------|--------------|-----------|
+| Interfaz visual | 100% | Material Design + layouts organizados |
+| Formularios validados | 100% | Login + Registro con íconos y mensajes |
+| Validaciones en lógica | 100% | ValidationUtils.kt desacoplado |
+| Animaciones | 100% | 10 animaciones diferentes |
+| MVVM + Persistencia | 100% | ViewModels + Room Database |
