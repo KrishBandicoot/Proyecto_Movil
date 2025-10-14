@@ -1,5 +1,5 @@
 ## Estudiantes: Cristian Lizama y Sofia Troncoso
-## 🎯 Resumen del Proyecto {#resumen}
+## 🎯 Resumen del Proyecto 
 
 **Kkarhua** es una aplicación Android de comercio electrónico para accesorios artesanales que cumple con todos los requisitos solicitados:
 
