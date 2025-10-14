@@ -18,7 +18,7 @@
 
 ---
 
-## 🏗️ Estructura del Proyecto {#estructura}
+## 🏗️ Estructura del Proyecto 
 
 ```
 com.example.kkarhua/
@@ -65,7 +65,7 @@ com.example.kkarhua/
 │
 └── MainActivity.kt                  ✅ Activity principal
 ```
-## 🎨 Características Implementadas {#caracteristicas}
+## 🎨 Características Implementadas 
 
 ### 1. 🎭 Animaciones (8 tipos)
 
