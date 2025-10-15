@@ -1,5 +1,5 @@
 ## Estudiantes: Cristian Lizama y Sofia Troncoso
-## 🎯 Resumen del Proyecto 
+## Resumen del Proyecto 
 
 **Kkarhua** es una aplicación Android de comercio electrónico para accesorios artesanales que cumple con todos los requisitos solicitados:
 
@@ -18,7 +18,7 @@
 
 ---
 
-## 🏗️ Estructura del Proyecto 
+## Estructura del Proyecto 
 
 ```
 com.example.kkarhua/
@@ -65,9 +65,9 @@ com.example.kkarhua/
 │
 └── MainActivity.kt                  ✅ Activity principal
 ```
-## 🎨 Características Implementadas 
+##  Características Implementadas 
 
-### 1. 🎭 Animaciones (8 tipos)
+### 1.  Animaciones (8 tipos)
 
 | Animación | Uso | Archivo |
 |-----------|-----|---------|
@@ -84,7 +84,7 @@ com.example.kkarhua/
 
 
 
-### 🎯 Cumplimiento de Requisitos:
+### Cumplimiento de Requisitos:
 
 | Requisito | Cumplimiento | Evidencia |
 |-----------|--------------|-----------|
