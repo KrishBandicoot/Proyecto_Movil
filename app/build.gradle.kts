@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false // Correct syntax using '=' and 'is' prefix
+            isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -32,7 +32,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "17" // Use double quotes
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -67,7 +67,7 @@ dependencies {
 
     // Glide para carga de imágenes
     implementation("com.github.bumptech.glide:glide:4.16.0")
-    kapt("com.github.bumptech.glide:compiler:4.16.0") // Use double quotes and parentheses
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 
     // CameraX para acceso a cámara
     implementation("androidx.camera:camera-camera2:1.3.1")
@@ -80,13 +80,15 @@ dependencies {
     // Lottie para animaciones
     implementation("com.airbnb.android:lottie:6.3.0")
 
+    // Retrofit para API
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // SwipeRefreshLayout - NUEVA DEPENDENCIA
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-
 }
-

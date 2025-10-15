@@ -12,5 +12,6 @@ data class Product(
     val price: Double,
     val imageUrl: String,
     val category: String,
-    val inStock: Boolean = true
+    val inStock: Boolean = true,
+    val stock: Int = 0 // Nuevo campo para el stock real
 )

@@ -4,14 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.kkarhua.data.local.CartDao
-import com.example.kkarhua.data.local.ProductDao
-import com.example.kkarhua.data.local.CartItem
-import com.example.kkarhua.data.local.Product
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Product::class, CartItem::class],
-    version = 1,
+    version = 2, // Incrementamos la versión
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,13 +20,23 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        // Migración de versión 1 a 2 para agregar el campo stock
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Agregar columna stock a la tabla products
+                database.execSQL("ALTER TABLE products ADD COLUMN stock INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "kkanhua.db"
-                ).build()
+                )
+                    .addMigrations(MIGRATION_1_2)
+                    .build()
                 INSTANCE = instance
                 instance
             }

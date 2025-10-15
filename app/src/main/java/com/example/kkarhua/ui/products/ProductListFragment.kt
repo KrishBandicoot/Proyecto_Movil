@@ -5,6 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -12,6 +14,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.kkarhua.R
 import com.example.kkarhua.data.local.AppDatabase
 import com.example.kkarhua.data.local.CartItem
@@ -27,6 +30,9 @@ class ProductListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var etSearch: EditText
+    private lateinit var progressBar: ProgressBar
+    private lateinit var txtError: TextView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
     private lateinit var productViewModel: ProductListViewModel
     private lateinit var cartViewModel: CartViewModel
     private lateinit var productAdapter: ProductAdapter
@@ -44,14 +50,35 @@ class ProductListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupRecyclerView(view)
+        setupViews(view)
+        setupRecyclerView()
         setupViewModels()
-        setupSearch(view)
+        setupSearch()
+        setupSwipeRefresh()
         observeProducts()
+        observeLoadingState()
     }
 
-    private fun setupRecyclerView(view: View) {
+    private fun setupViews(view: View) {
         recyclerView = view.findViewById(R.id.recyclerProducts)
+        etSearch = view.findViewById(R.id.etSearch)
+
+        // Agregar estos elementos al layout si no existen
+        progressBar = view.findViewById<ProgressBar?>(R.id.progressBar)
+            ?: ProgressBar(requireContext()).apply {
+                visibility = View.GONE
+            }
+
+        txtError = view.findViewById<TextView?>(R.id.txtError)
+            ?: TextView(requireContext()).apply {
+                visibility = View.GONE
+            }
+
+        swipeRefresh = view.findViewById<SwipeRefreshLayout?>(R.id.swipeRefresh)
+            ?: SwipeRefreshLayout(requireContext())
+    }
+
+    private fun setupRecyclerView() {
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
         productAdapter = ProductAdapter(
@@ -82,11 +109,15 @@ class ProductListFragment : Fragment() {
             .get(CartViewModel::class.java)
     }
 
-    private fun setupSearch(view: View) {
-        etSearch = view.findViewById(R.id.etSearch)
-
+    private fun setupSearch() {
         etSearch.addTextChangedListener { text ->
             filterProducts(text.toString())
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        swipeRefresh.setOnRefreshListener {
+            productViewModel.syncProducts()
         }
     }
 
@@ -95,10 +126,37 @@ class ProductListFragment : Fragment() {
             allProducts = products
             productAdapter.submitList(products)
 
-            if (products.isEmpty()) {
+            if (products.isEmpty() && productViewModel.isLoading.value != true) {
+                txtError.visibility = View.VISIBLE
+                txtError.text = "No hay productos disponibles"
+            } else {
+                txtError.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun observeLoadingState() {
+        // Observar estado de carga
+        productViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            swipeRefresh.isRefreshing = isLoading
+        }
+
+        // Observar errores
+        productViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                txtError.visibility = View.VISIBLE
+                txtError.text = it
+                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // Observar sincronización exitosa
+        productViewModel.syncSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
                 Toast.makeText(
                     requireContext(),
-                    "No hay productos disponibles",
+                    "Productos actualizados correctamente",
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -125,6 +183,15 @@ class ProductListFragment : Fragment() {
     }
 
     private fun addProductToCart(product: Product) {
+        if (product.stock <= 0) {
+            Toast.makeText(
+                requireContext(),
+                "Producto sin stock disponible",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
         val cartItem = CartItem(
             productId = product.id,
             productName = product.name,

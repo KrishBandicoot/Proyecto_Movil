@@ -1,10 +1,14 @@
 package com.example.kkarhua.data.repository
 
+import android.util.Log
 import com.example.kkarhua.data.local.Product
 import com.example.kkarhua.data.local.ProductDao
+import com.example.kkarhua.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 
 class ProductRepository(private val productDao: ProductDao) {
+
+    private val apiService = RetrofitClient.apiService
 
     fun getAllProducts(): Flow<List<Product>> {
         return productDao.getAllProducts()
@@ -30,64 +34,88 @@ class ProductRepository(private val productDao: ProductDao) {
         productDao.deleteAllProducts()
     }
 
-    // Datos de muestra para inicializar la BD
-    suspend fun insertSampleData() {
-        val sampleProducts = listOf(
-            Product(
-                id = "1",
-                name = "Collar de Plata",
-                description = "Elegante collar de plata con diseño minimalista",
-                price = 45.99,
-                imageUrl = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400",
-                category = "Collares",
-                inStock = true
-            ),
-            Product(
-                id = "2",
-                name = "Aretes de Oro",
-                description = "Aretes de oro 18k con piedras preciosas",
-                price = 89.99,
-                imageUrl = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400",
-                category = "Aretes",
-                inStock = true
-            ),
-            Product(
-                id = "3",
-                name = "Pulsera Artesanal",
-                description = "Pulsera hecha a mano con hilos de colores",
-                price = 15.99,
-                imageUrl = "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400",
-                category = "Pulseras",
-                inStock = true
-            ),
-            Product(
-                id = "4",
-                name = "Anillo de Compromiso",
-                description = "Hermoso anillo con diamante central",
-                price = 299.99,
-                imageUrl = "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400",
-                category = "Anillos",
-                inStock = true
-            ),
-            Product(
-                id = "5",
-                name = "Reloj Clásico",
-                description = "Reloj de pulsera con correa de cuero",
-                price = 125.50,
-                imageUrl = "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400",
-                category = "Relojes",
-                inStock = true
-            ),
-            Product(
-                id = "6",
-                name = "Broche Vintage",
-                description = "Broche antiguo restaurado con detalles dorados",
-                price = 34.99,
-                imageUrl = "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400",
-                category = "Broches",
-                inStock = true
-            )
-        )
-        insertAllProducts(sampleProducts)
+    /**
+     * Sincroniza los productos desde Xano API
+     * Obtiene todos los productos de la API y los guarda en la base de datos local
+     */
+    suspend fun syncProductsFromApi(): Result<List<Product>> {
+        return try {
+            val response = apiService.getAllProducts()
+
+            if (response.isSuccessful) {
+                val productsResponse = response.body()
+
+                if (productsResponse != null) {
+                    // Convertir ProductResponse a Product (entidad local)
+                    val products = productsResponse.map { productResponse ->
+                        Product(
+                            id = productResponse.id.toString(),
+                            name = productResponse.name,
+                            description = productResponse.description,
+                            price = productResponse.price,
+                            imageUrl = productResponse.imageUrl,
+                            category = productResponse.category,
+                            inStock = productResponse.stock > 0,
+                            stock = productResponse.stock
+                        )
+                    }
+
+                    // Limpiar base de datos y guardar nuevos productos
+                    deleteAllProducts()
+                    insertAllProducts(products)
+
+                    Log.d("ProductRepository", "Productos sincronizados: ${products.size}")
+                    Result.success(products)
+                } else {
+                    Log.e("ProductRepository", "Response body es null")
+                    Result.failure(Exception("No se recibieron productos"))
+                }
+            } else {
+                val errorMsg = "Error en la respuesta: ${response.code()} - ${response.message()}"
+                Log.e("ProductRepository", errorMsg)
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Error al sincronizar productos: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Obtiene un producto específico desde la API
+     */
+    suspend fun fetchProductFromApi(productId: Int): Result<Product> {
+        return try {
+            val response = apiService.getProductById(productId)
+
+            if (response.isSuccessful) {
+                val productResponse = response.body()
+
+                if (productResponse != null) {
+                    val product = Product(
+                        id = productResponse.id.toString(),
+                        name = productResponse.name,
+                        description = productResponse.description,
+                        price = productResponse.price,
+                        imageUrl = productResponse.imageUrl,
+                        category = productResponse.category,
+                        inStock = productResponse.stock > 0,
+                        stock = productResponse.stock
+                    )
+
+                    // Actualizar en la base de datos local
+                    insertProduct(product)
+
+                    Result.success(product)
+                } else {
+                    Result.failure(Exception("Producto no encontrado"))
+                }
+            } else {
+                Result.failure(Exception("Error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "Error al obtener producto: ${e.message}", e)
+            Result.failure(e)
+        }
     }
 }

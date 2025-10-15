@@ -1,6 +1,8 @@
 package com.example.kkarhua.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
@@ -13,17 +15,60 @@ class ProductListViewModel(private val repository: ProductRepository) : ViewMode
 
     val products: LiveData<List<Product>> = repository.getAllProducts().asLiveData()
 
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    private val _syncSuccess = MutableLiveData<Boolean>()
+    val syncSuccess: LiveData<Boolean> = _syncSuccess
+
     init {
-        // Insertar datos de muestra al iniciar
-        loadSampleData()
+        // Sincronizar productos desde Xano al iniciar
+        syncProducts()
     }
 
-    private fun loadSampleData() = viewModelScope.launch {
-        repository.insertSampleData()
+    /**
+     * Sincroniza los productos desde la API de Xano
+     */
+    fun syncProducts() = viewModelScope.launch {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        try {
+            val result = repository.syncProductsFromApi()
+
+            result.onSuccess { products ->
+                Log.d("ProductListViewModel", "Sincronización exitosa: ${products.size} productos")
+                _syncSuccess.value = true
+                _errorMessage.value = null
+            }.onFailure { exception ->
+                Log.e("ProductListViewModel", "Error en sincronización: ${exception.message}")
+                _errorMessage.value = "Error al cargar productos: ${exception.message}"
+                _syncSuccess.value = false
+            }
+        } catch (e: Exception) {
+            Log.e("ProductListViewModel", "Excepción en syncProducts: ${e.message}", e)
+            _errorMessage.value = "Error inesperado: ${e.message}"
+            _syncSuccess.value = false
+        } finally {
+            _isLoading.value = false
+        }
     }
 
+    /**
+     * Obtiene un producto por ID
+     */
     fun getProductById(productId: String) = viewModelScope.launch {
         repository.getProductById(productId)
+    }
+
+    /**
+     * Limpia el mensaje de error
+     */
+    fun clearError() {
+        _errorMessage.value = null
     }
 }
 
