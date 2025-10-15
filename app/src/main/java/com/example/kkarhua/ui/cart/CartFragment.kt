@@ -90,7 +90,7 @@ class CartFragment : Fragment() {
         }
 
         cartViewModel.totalPrice.observe(viewLifecycleOwner) { total ->
-            txtTotalPrice.text = "$${String.format("%.2f", total)}"
+            txtTotalPrice.text = "$${total.toInt()}"
         }
     }
 

@@ -46,7 +46,7 @@ class CartAdapter(
 
         fun bind(cartItem: CartItem) {
             txtProductName.text = cartItem.productName
-            txtProductPrice.text = "${String.format("%.2f", cartItem.price * cartItem.quantity)}"
+            txtProductPrice.text = "$${(cartItem.price * cartItem.quantity).toInt()}"
             txtQuantity.text = cartItem.quantity.toString()
 
             Glide.with(itemView.context)

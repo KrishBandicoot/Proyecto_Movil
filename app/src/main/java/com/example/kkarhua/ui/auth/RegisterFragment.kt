@@ -7,13 +7,18 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.kkarhua.R
+import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.utils.ValidationUtils
+import com.example.kkarhua.viewmodel.AuthViewModel
+import com.example.kkarhua.viewmodel.AuthViewModelFactory
 
 class RegisterFragment : Fragment() {
 
@@ -23,6 +28,8 @@ class RegisterFragment : Fragment() {
     private lateinit var etConfirmPassword: EditText
     private lateinit var btnRegistrar: Button
     private lateinit var txtLogin: TextView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var authViewModel: AuthViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,9 +43,11 @@ class RegisterFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupViews(view)
+        setupViewModel()
         setupValidation()
         setupListeners()
         setupAnimations()
+        observeViewModel()
     }
 
     private fun setupViews(view: View) {
@@ -48,6 +57,18 @@ class RegisterFragment : Fragment() {
         etConfirmPassword = view.findViewById(R.id.etConfirmPassword)
         btnRegistrar = view.findViewById(R.id.btnRegistrar)
         txtLogin = view.findViewById(R.id.txtLogin)
+
+        // Agregar ProgressBar si no existe en el layout
+        progressBar = view.findViewById<ProgressBar?>(R.id.progressBar)
+            ?: ProgressBar(requireContext()).apply {
+                visibility = View.GONE
+            }
+    }
+
+    private fun setupViewModel() {
+        val repository = AuthRepository(requireContext())
+        val factory = AuthViewModelFactory(repository)
+        authViewModel = ViewModelProvider(this, factory).get(AuthViewModel::class.java)
     }
 
     private fun setupValidation() {
@@ -113,6 +134,46 @@ class RegisterFragment : Fragment() {
         btnRegistrar.startAnimation(fadeIn)
     }
 
+    private fun observeViewModel() {
+        // Observar estado de carga
+        authViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            btnRegistrar.isEnabled = !isLoading
+
+            if (isLoading) {
+                btnRegistrar.text = "Registrando..."
+            } else {
+                btnRegistrar.text = "Registrarse"
+            }
+        }
+
+        // Observar registro exitoso
+        authViewModel.signupSuccess.observe(viewLifecycleOwner) { authResponse ->
+            authResponse?.let {
+                Toast.makeText(
+                    requireContext(),
+                    "✓ Registro exitoso\n¡Bienvenido ${it.user.name}!",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                authViewModel.clearSuccessEvents()
+                findNavController().navigate(R.id.homeFragment)
+            }
+        }
+
+        // Observar errores
+        authViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                Toast.makeText(
+                    requireContext(),
+                    "✗ $it",
+                    Toast.LENGTH_LONG
+                ).show()
+                authViewModel.clearError()
+            }
+        }
+    }
+
     private fun animateButton(view: View) {
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.bounce)
         view.startAnimation(animation)
@@ -147,12 +208,8 @@ class RegisterFragment : Fragment() {
                 etConfirmPassword.requestFocus()
             }
             else -> {
-                Toast.makeText(
-                    requireContext(),
-                    "✓ Registro exitoso\n¡Bienvenido $nombre!",
-                    Toast.LENGTH_LONG
-                ).show()
-                findNavController().navigate(R.id.homeFragment)
+                // Realizar registro con la API
+                authViewModel.signup(nombre, email, password)
             }
         }
     }

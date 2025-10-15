@@ -7,13 +7,18 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.kkarhua.R
+import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.utils.ValidationUtils
+import com.example.kkarhua.viewmodel.AuthViewModel
+import com.example.kkarhua.viewmodel.AuthViewModelFactory
 import com.google.android.material.textfield.TextInputLayout
 
 class LoginFragment : Fragment() {
@@ -24,6 +29,8 @@ class LoginFragment : Fragment() {
     private lateinit var txtRegister: TextView
     private lateinit var tilEmail: TextInputLayout
     private lateinit var tilPassword: TextInputLayout
+    private lateinit var progressBar: ProgressBar
+    private lateinit var authViewModel: AuthViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,9 +44,11 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupViews(view)
+        setupViewModel()
         setupAnimations()
         setupValidation()
         setupListeners()
+        observeViewModel()
     }
 
     private fun setupViews(view: View) {
@@ -47,10 +56,20 @@ class LoginFragment : Fragment() {
         etPassword = view.findViewById(R.id.etPassword)
         btnLogin = view.findViewById(R.id.btnLogin)
         txtRegister = view.findViewById(R.id.txtRegister)
-
-        // Si usas TextInputLayout en el XML
         tilEmail = view.findViewById(R.id.tilEmail)
         tilPassword = view.findViewById(R.id.tilPassword)
+
+        // Agregar ProgressBar si no existe en el layout
+        progressBar = view.findViewById<ProgressBar?>(R.id.progressBar)
+            ?: ProgressBar(requireContext()).apply {
+                visibility = View.GONE
+            }
+    }
+
+    private fun setupViewModel() {
+        val repository = AuthRepository(requireContext())
+        val factory = AuthViewModelFactory(repository)
+        authViewModel = ViewModelProvider(this, factory).get(AuthViewModel::class.java)
     }
 
     private fun setupAnimations() {
@@ -95,6 +114,46 @@ class LoginFragment : Fragment() {
         }
     }
 
+    private fun observeViewModel() {
+        // Observar estado de carga
+        authViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            btnLogin.isEnabled = !isLoading
+
+            if (isLoading) {
+                btnLogin.text = "Iniciando sesión..."
+            } else {
+                btnLogin.text = "Iniciar sesión"
+            }
+        }
+
+        // Observar login exitoso
+        authViewModel.loginSuccess.observe(viewLifecycleOwner) { authResponse ->
+            authResponse?.let {
+                Toast.makeText(
+                    requireContext(),
+                    "✓ Bienvenido ${it.user.name}!",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                authViewModel.clearSuccessEvents()
+                findNavController().navigate(R.id.homeFragment)
+            }
+        }
+
+        // Observar errores
+        authViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            errorMessage?.let {
+                Toast.makeText(
+                    requireContext(),
+                    "✗ $it",
+                    Toast.LENGTH_LONG
+                ).show()
+                authViewModel.clearError()
+            }
+        }
+    }
+
     private fun animateButton(view: View) {
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.bounce)
         view.startAnimation(animation)
@@ -119,14 +178,7 @@ class LoginFragment : Fragment() {
             return
         }
 
-        // Simulación de login exitoso
-        Toast.makeText(
-            requireContext(),
-            "✓ Inicio de sesión exitoso\nBienvenido a Kkarhua!",
-            Toast.LENGTH_LONG
-        ).show()
-
-        // Navegar al home
-        findNavController().navigate(R.id.homeFragment)
+        // Realizar login con la API
+        authViewModel.login(email, password)
     }
 }

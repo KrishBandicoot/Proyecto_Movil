@@ -151,16 +151,6 @@ class ProductListFragment : Fragment() {
             }
         }
 
-        // Observar sincronización exitosa
-        productViewModel.syncSuccess.observe(viewLifecycleOwner) { success ->
-            if (success) {
-                Toast.makeText(
-                    requireContext(),
-                    "Productos actualizados correctamente",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
     }
 
     private fun filterProducts(query: String) {
