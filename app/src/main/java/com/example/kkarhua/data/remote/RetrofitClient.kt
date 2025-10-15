@@ -1,16 +1,34 @@
 package com.example.kkarhua.data.remote
 
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
     private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:kJUj45sO/"
     private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:Ilv8KuLd/"
 
+    // Cliente HTTP con logging para debugging
+    private val okHttpClient: OkHttpClient by lazy {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
+
     private val retrofitProducts: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL_PRODUCTS)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -18,6 +36,7 @@ object RetrofitClient {
     private val retrofitAuth: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL_AUTH)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

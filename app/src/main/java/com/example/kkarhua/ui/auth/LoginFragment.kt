@@ -130,9 +130,12 @@ class LoginFragment : Fragment() {
         // Observar login exitoso
         authViewModel.loginSuccess.observe(viewLifecycleOwner) { authResponse ->
             authResponse?.let {
+                // Uso seguro del operador ?. para acceder a user
+                val userName = it.user?.name ?: "Usuario"
+
                 Toast.makeText(
                     requireContext(),
-                    "✓ Bienvenido ${it.user.name}!",
+                    "✓ Bienvenido $userName!",
                     Toast.LENGTH_LONG
                 ).show()
 

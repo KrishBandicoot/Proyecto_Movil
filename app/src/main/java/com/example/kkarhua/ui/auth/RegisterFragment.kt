@@ -150,9 +150,12 @@ class RegisterFragment : Fragment() {
         // Observar registro exitoso
         authViewModel.signupSuccess.observe(viewLifecycleOwner) { authResponse ->
             authResponse?.let {
+                // Uso seguro del operador ?. para acceder a user
+                val userName = it.user?.name ?: "Usuario"
+
                 Toast.makeText(
                     requireContext(),
-                    "✓ Registro exitoso\n¡Bienvenido ${it.user.name}!",
+                    "✓ Registro exitoso\n¡Bienvenido $userName!",
                     Toast.LENGTH_LONG
                 ).show()
 

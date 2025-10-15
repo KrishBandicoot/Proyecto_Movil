@@ -1,5 +1,7 @@
 package com.example.kkarhua.data.remote
 
+import com.google.gson.annotations.SerializedName
+
 // Request models
 data class SignupRequest(
     val name: String,
@@ -14,14 +16,19 @@ data class LoginRequest(
 
 // Response models
 data class AuthResponse(
-    val authToken: String,
-    val user: UserData
+    @SerializedName("authToken")
+    val authToken: String?,
+
+    @SerializedName("user")
+    val user: UserData?
 )
 
 data class UserData(
     val id: Int,
     val name: String,
     val email: String,
+
+    @SerializedName("created_at")
     val created_at: Long? = null
 )
 
@@ -29,5 +36,13 @@ data class MeResponse(
     val id: Int,
     val name: String,
     val email: String,
+
+    @SerializedName("created_at")
     val created_at: Long? = null
+)
+
+// Error response model
+data class ErrorResponse(
+    val message: String?,
+    val error: String?
 )
