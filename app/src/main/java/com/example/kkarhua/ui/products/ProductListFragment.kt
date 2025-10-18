@@ -159,7 +159,6 @@ class ProductListFragment : Fragment() {
         } else {
             allProducts.filter { product ->
                 product.name.contains(query, ignoreCase = true) ||
-                        product.category.contains(query, ignoreCase = true) ||
                         product.description.contains(query, ignoreCase = true)
             }
         }

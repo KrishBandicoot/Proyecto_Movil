@@ -51,7 +51,6 @@ class ProductAdapter(
         fun bind(product: Product) {
             txtProductName.text = product.name
             txtProductPrice.text = "$${String.format("%.0f", product.price)}"
-            txtProductCategory.text = product.category
 
             Glide.with(itemView.context)
                 .load(product.imageUrl)

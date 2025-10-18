@@ -74,7 +74,6 @@ class AddProductFragment : Fragment() {
         etProductName = view.findViewById(R.id.etProductName)
         etProductDescription = view.findViewById(R.id.etProductDescription)
         etProductPrice = view.findViewById(R.id.etProductPrice)
-        etProductCategory = view.findViewById(R.id.etProductCategory)
         etProductStock = view.findViewById(R.id.etProductStock)
         imgProductPhoto = view.findViewById(R.id.imgProductPhoto)
         btnSelectImage = view.findViewById(R.id.btnSelectImage)
@@ -175,8 +174,6 @@ class AddProductFragment : Fragment() {
                 description = description,
                 price = price,
                 imageUrl = imageUrl,
-                category = category,
-                inStock = stock > 0,
                 stock = stock
             )
 

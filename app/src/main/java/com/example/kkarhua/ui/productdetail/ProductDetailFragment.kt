@@ -89,7 +89,6 @@ class ProductDetailFragment : Fragment() {
         txtProductName.text = product.name
         txtProductPrice.text = "$${String.format("%.0f", product.price)}"
         txtProductDescription.text = product.description
-        txtProductCategory.text = "Categoría: ${product.category}"
 
         Glide.with(requireContext())
             .load(product.imageUrl)
