@@ -96,27 +96,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Categoría del producto -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilProductCategory"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="Categoría"
-            app:errorEnabled="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilProductDescription"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etProductCategory"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:padding="12dp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
         <!-- Precio del producto -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilProductPrice"
@@ -126,7 +105,7 @@
             app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilProductCategory"
+            app:layout_constraintTop_toBottomOf="@+id/tilProductDescription"
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputEditText

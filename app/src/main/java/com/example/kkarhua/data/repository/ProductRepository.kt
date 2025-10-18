@@ -54,8 +54,6 @@ class ProductRepository(private val productDao: ProductDao) {
                             description = productResponse.description,
                             price = productResponse.price,
                             imageUrl = productResponse.imageUrl,
-                            category = productResponse.category,
-                            inStock = productResponse.stock > 0,
                             stock = productResponse.stock
                         )
                     }
@@ -98,8 +96,6 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         imageUrl = productResponse.imageUrl,
-                        category = productResponse.category,
-                        inStock = productResponse.stock > 0,
                         stock = productResponse.stock
                     )
 

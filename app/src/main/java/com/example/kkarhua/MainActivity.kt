@@ -33,7 +33,8 @@ class MainActivity : AppCompatActivity() {
             setOf(
                 R.id.homeFragment,
                 R.id.productListFragment,
-                R.id.cartFragment
+                R.id.cartFragment,
+                R.id.addProductFragment
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -61,6 +62,13 @@ class MainActivity : AppCompatActivity() {
                         }
                         true
                     }
+                    R.id.navigation_add_product -> {
+                        // Navegar a agregar producto
+                        if (navController.currentDestination?.id != R.id.addProductFragment) {
+                            navController.navigate(R.id.addProductFragment)
+                        }
+                        true
+                    }
                     else -> false
                 }
             }
@@ -71,6 +79,7 @@ class MainActivity : AppCompatActivity() {
                     R.id.homeFragment -> bottomNav.selectedItemId = R.id.navigation_home
                     R.id.productListFragment -> bottomNav.selectedItemId = R.id.navigation_dashboard
                     R.id.cartFragment -> bottomNav.selectedItemId = R.id.navigation_notifications
+                    R.id.addProductFragment -> bottomNav.selectedItemId = R.id.navigation_add_product
                 }
             }
         }

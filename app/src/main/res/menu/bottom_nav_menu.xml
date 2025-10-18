@@ -16,5 +16,9 @@
         android:icon="@drawable/ic_notifications"
         android:title="@string/title_notifications" />
 
-</menu>
+    <item
+        android:id="@+id/navigation_add_product"
+        android:icon="@android:drawable/ic_input_add"
+        android:title="Agregar" />
 
+</menu>
