@@ -10,6 +10,6 @@ data class Product(
     val name: String,
     val description: String,
     val price: Double,
-    val imageUrl: String,
+    val image: String,  // Cambiado de imageUrl a image
     val stock: Int = 0
 )

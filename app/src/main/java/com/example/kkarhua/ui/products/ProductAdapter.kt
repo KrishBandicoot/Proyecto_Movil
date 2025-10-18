@@ -1,5 +1,6 @@
 package com.example.kkarhua.ui.products
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.kkarhua.R
 import com.example.kkarhua.data.local.Product
 
@@ -28,7 +30,6 @@ class ProductAdapter(
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         holder.bind(getItem(position))
 
-        // Animación de entrada
         val animation = AnimationUtils.loadAnimation(
             holder.itemView.context,
             R.anim.item_animation_fall_down
@@ -52,24 +53,50 @@ class ProductAdapter(
             txtProductName.text = product.name
             txtProductPrice.text = "$${String.format("%.0f", product.price)}"
 
-            Glide.with(itemView.context)
-                .load(product.imageUrl)
-                .placeholder(R.drawable.ic_launcher_background)
-                .error(R.drawable.ic_launcher_background)
-                .into(imgProduct)
+            loadProductImage(product.image)
 
             itemView.setOnClickListener {
                 onProductClick(product)
             }
 
             btnAddToCart.setOnClickListener {
-                // Animación al agregar al carrito
                 val animation = AnimationUtils.loadAnimation(
                     itemView.context,
                     R.anim.bounce
                 )
                 it.startAnimation(animation)
                 onAddToCart(product)
+            }
+        }
+
+        private fun loadProductImage(image: String) {
+            Log.d("ProductAdapter", "Cargando imagen: $image")
+
+            when {
+                image.isBlank() -> {
+                    Log.w("ProductAdapter", "Campo image vacío")
+                    imgProduct.setImageResource(R.drawable.ic_launcher_background)
+                }
+                image.startsWith("http://") || image.startsWith("https://") -> {
+                    Glide.with(itemView.context)
+                        .load(image)
+                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                        .placeholder(R.drawable.ic_launcher_background)
+                        .error(R.drawable.ic_launcher_background)
+                        .into(imgProduct)
+                }
+                image.startsWith("content://") -> {
+                    Glide.with(itemView.context)
+                        .load(image)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .placeholder(R.drawable.ic_launcher_background)
+                        .error(R.drawable.ic_launcher_background)
+                        .into(imgProduct)
+                }
+                else -> {
+                    Log.w("ProductAdapter", "Formato de image desconocido: $image")
+                    imgProduct.setImageResource(R.drawable.ic_launcher_background)
+                }
             }
         }
     }

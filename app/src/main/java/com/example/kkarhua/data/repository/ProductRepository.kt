@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.kkarhua.data.local.Product
 import com.example.kkarhua.data.local.ProductDao
 import com.example.kkarhua.data.remote.RetrofitClient
+import com.example.kkarhua.data.remote.getImageUrl
 import kotlinx.coroutines.flow.Flow
 
 class ProductRepository(private val productDao: ProductDao) {
@@ -34,42 +35,57 @@ class ProductRepository(private val productDao: ProductDao) {
         productDao.deleteAllProducts()
     }
 
-    /**
-     * Sincroniza los productos desde Xano API
-     * Obtiene todos los productos de la API y los guarda en la base de datos local
-     */
     suspend fun syncProductsFromApi(): Result<List<Product>> {
         return try {
+            Log.d("ProductRepository", "Iniciando sincronización...")
             val response = apiService.getAllProducts()
 
             if (response.isSuccessful) {
                 val productsResponse = response.body()
+                Log.d("ProductRepository", "Response body: $productsResponse")
 
                 if (productsResponse != null) {
-                    // Convertir ProductResponse a Product (entidad local)
-                    val products = productsResponse.map { productResponse ->
-                        Product(
-                            id = productResponse.id.toString(),
-                            name = productResponse.name,
-                            description = productResponse.description,
-                            price = productResponse.price,
-                            imageUrl = productResponse.imageUrl,
-                            stock = productResponse.stock
-                        )
+                    val products = productsResponse.mapNotNull { productResponse ->
+                        try {
+                            val imageFromXano = productResponse.image.getImageUrl()
+
+                            Log.d("ProductRepository", """
+                                Producto: ${productResponse.name}
+                                Image object: ${productResponse.image}
+                                URL extraída: $imageFromXano
+                            """.trimIndent())
+
+                            Product(
+                                id = productResponse.id.toString(),
+                                name = productResponse.name,
+                                description = productResponse.description,
+                                price = productResponse.price,
+                                image = imageFromXano,
+                                stock = productResponse.stock
+                            )
+                        } catch (e: Exception) {
+                            Log.e("ProductRepository", "Error procesando producto ${productResponse.name}: ${e.message}")
+                            null
+                        }
                     }
 
-                    // Limpiar base de datos y guardar nuevos productos
+                    if (products.isEmpty()) {
+                        Log.e("ProductRepository", "No se pudieron procesar productos")
+                        return Result.failure(Exception("No se pudieron procesar los productos de la API"))
+                    }
+
                     deleteAllProducts()
                     insertAllProducts(products)
 
-                    Log.d("ProductRepository", "Productos sincronizados: ${products.size}")
+                    Log.d("ProductRepository", "Productos sincronizados exitosamente: ${products.size}")
                     Result.success(products)
                 } else {
                     Log.e("ProductRepository", "Response body es null")
                     Result.failure(Exception("No se recibieron productos"))
                 }
             } else {
-                val errorMsg = "Error en la respuesta: ${response.code()} - ${response.message()}"
+                val errorBody = response.errorBody()?.string()
+                val errorMsg = "Error en la respuesta: ${response.code()} - ${response.message()}\nBody: $errorBody"
                 Log.e("ProductRepository", errorMsg)
                 Result.failure(Exception(errorMsg))
             }
@@ -79,9 +95,6 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
-    /**
-     * Obtiene un producto específico desde la API
-     */
     suspend fun fetchProductFromApi(productId: Int): Result<Product> {
         return try {
             val response = apiService.getProductById(productId)
@@ -90,16 +103,17 @@ class ProductRepository(private val productDao: ProductDao) {
                 val productResponse = response.body()
 
                 if (productResponse != null) {
+                    val imageFromXano = productResponse.image.getImageUrl()
+
                     val product = Product(
                         id = productResponse.id.toString(),
                         name = productResponse.name,
                         description = productResponse.description,
                         price = productResponse.price,
-                        imageUrl = productResponse.imageUrl,
+                        image = imageFromXano,
                         stock = productResponse.stock
                     )
 
-                    // Actualizar en la base de datos local
                     insertProduct(product)
 
                     Result.success(product)

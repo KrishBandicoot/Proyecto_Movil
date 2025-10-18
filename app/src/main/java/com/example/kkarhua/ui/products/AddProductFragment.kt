@@ -165,7 +165,7 @@ class AddProductFragment : Fragment() {
             }
 
             // Convertir URI a String para almacenar
-            val imageUrl = selectedImageUri.toString()
+            val imageUri = selectedImageUri.toString()
 
             // Crear el producto
             val product = Product(
@@ -173,7 +173,7 @@ class AddProductFragment : Fragment() {
                 name = name,
                 description = description,
                 price = price,
-                imageUrl = imageUrl,
+                image = imageUri,
                 stock = stock
             )
 

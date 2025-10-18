@@ -186,7 +186,7 @@ class ProductListFragment : Fragment() {
             productName = product.name,
             quantity = 1,
             price = product.price,
-            imageUrl = product.imageUrl
+            image = product.image
         )
 
         cartViewModel.addToCart(cartItem)

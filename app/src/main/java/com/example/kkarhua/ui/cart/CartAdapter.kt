@@ -50,7 +50,7 @@ class CartAdapter(
             txtQuantity.text = cartItem.quantity.toString()
 
             Glide.with(itemView.context)
-                .load(cartItem.imageUrl)
+                .load(cartItem.image)
                 .placeholder(R.drawable.ic_launcher_background)
                 .error(R.drawable.ic_launcher_background)
                 .into(imgProduct)

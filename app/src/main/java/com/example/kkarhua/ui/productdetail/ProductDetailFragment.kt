@@ -91,7 +91,7 @@ class ProductDetailFragment : Fragment() {
         txtProductDescription.text = product.description
 
         Glide.with(requireContext())
-            .load(product.imageUrl)
+            .load(product.image)
             .placeholder(R.drawable.ic_launcher_background)
             .error(R.drawable.ic_launcher_background)
             .into(imgProduct)
@@ -125,7 +125,7 @@ class ProductDetailFragment : Fragment() {
                 productName = product.name,
                 quantity = 1,
                 price = product.price,
-                imageUrl = product.imageUrl
+                image = product.image
             )
 
             cartViewModel.addToCart(cartItem)
