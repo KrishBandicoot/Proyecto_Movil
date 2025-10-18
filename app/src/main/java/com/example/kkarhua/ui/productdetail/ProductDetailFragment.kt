@@ -87,7 +87,7 @@ class ProductDetailFragment : Fragment() {
 
     private fun displayProduct(product: Product) {
         txtProductName.text = product.name
-        txtProductPrice.text = "$${String.format("%.2f", product.price)}"
+        txtProductPrice.text = "$${String.format("%.0f", product.price)}"
         txtProductDescription.text = product.description
         txtProductCategory.text = "Categoría: ${product.category}"
 
