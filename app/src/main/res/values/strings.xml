@@ -1,0 +1,26 @@
+<resources>
+
+<string name="cart_title">Carrito de Compras</string>
+<string name="proceed_to_checkout">Proceder al pago</string>
+<string name="empty_cart">Tu carrito está vacío</string>
+<string name="total">Total:</string>
+<string name="app_name">Kkarhua</string>
+    <string name="decrease_quantity">Decrease quantity</string>
+    <string name="increase_quantity">Increase quantity</string>
+    <string name="register_title">Crear Cuenta</string>
+    <string name="full_name">Nombre completo</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="confirm_password">Confirmar contraseña</string>
+    <string name="register_button">Registrarse</string>
+    <string name="have_account">¿Ya tienes cuenta? Iniciar sesión</string>
+    <string name="add_to_cart">Agregar al carrito</string>
+    <string name="product_image">Imagen del producto</string>
+    <string name="product_list">Lista de Productos</string>
+    <string name="search_products">Buscar productos...</string>
+    <string name="empty_products">No hay productos disponibles</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Productos</string>
+    <string name="title_notifications">Carrito</string>
+
+</resources>
