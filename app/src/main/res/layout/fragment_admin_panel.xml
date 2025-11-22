@@ -6,11 +6,25 @@
     android:padding="24dp"
     android:background="@color/white">
 
+    <!-- Botón para volver a vista de cliente -->
+    <Button
+        android:id="@+id/btnBackToClient"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="← Volver a Vista Cliente"
+        android:textSize="14sp"
+        android:padding="12dp"
+        android:backgroundTint="@color/purple_500"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp" />
+
     <TextView
         android:id="@+id/titleText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Bienvenido a Kkarhua 🪻"
+        android:text="🛠️ Panel de Administrador"
         android:textSize="28sp"
         android:textStyle="bold"
         android:textColor="@color/purple_700"
@@ -18,13 +32,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="80dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="100dp" />
 
     <TextView
         android:id="@+id/subtitleText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Accesorios únicos para ti"
+        android:text="Gestiona los productos de tu tienda"
         android:textSize="16sp"
         android:textColor="#666666"
         android:gravity="center"
@@ -33,40 +48,26 @@
         app:layout_constraintTop_toBottomOf="@+id/titleText"
         android:layout_marginTop="8dp" />
 
+    <!-- Botón principal: Agregar Producto -->
     <Button
-        android:id="@+id/btnLogout"
+        android:id="@+id/btnAddProduct"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="🚪 Cerrar Sesión"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:backgroundTint="@android:color/holo_red_light"
+        android:text="➕ Agregar Producto"
+        android:textSize="18sp"
+        android:padding="20dp"
+        android:backgroundTint="@color/purple_700"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subtitleText"
-        android:layout_marginTop="60dp" />
-
-    <!-- ✅ NUEVO: Botón para Panel de Administrador (solo visible si es admin) -->
-    <Button
-        android:id="@+id/btnAdminPanel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="🛠️ Panel de Administrador"
-        android:textSize="16sp"
-        android:padding="16dp"
-        android:backgroundTint="@color/purple_700"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnLogout"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="40dp" />
 
     <TextView
         android:id="@+id/txtInfo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Descubre nuestra colección exclusiva de accesorios artesanales"
-        android:textSize="14sp"
+        android:text="Solo los administradores pueden acceder a esta sección"
+        android:textSize="12sp"
         android:textColor="#888888"
         android:gravity="center"
         android:layout_marginHorizontal="32dp"

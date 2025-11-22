@@ -16,9 +16,7 @@
         android:icon="@drawable/ic_notifications"
         android:title="@string/title_notifications" />
 
-    <item
-        android:id="@+id/navigation_add_product"
-        android:icon="@android:drawable/ic_input_add"
-        android:title="Agregar" />
+    <!-- ✅ Eliminamos el botón de agregar producto del BottomNav -->
+    <!-- Solo los admins pueden agregar productos desde el Panel Admin -->
 
 </menu>

@@ -15,11 +15,12 @@ class AuthRepository(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_EMAIL = "user_email"
+        private const val KEY_USER_ROLE = "user_role" // ✅ Guardamos el rol
     }
 
     suspend fun signup(name: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val request = SignupRequest(name, email, password)
+            val request = SignupRequest(name, email, password, role = "cliente") // ✅ Rol cliente
             val response = authService.signup(request)
 
             if (response.isSuccessful) {
@@ -80,6 +81,8 @@ class AuthRepository(context: Context) {
             if (response.isSuccessful) {
                 val meResponse = response.body()
                 if (meResponse != null) {
+                    // ✅ Actualizar rol si cambió
+                    prefs.edit().putString(KEY_USER_ROLE, meResponse.role ?: "cliente").apply()
                     Result.success(meResponse)
                 } else {
                     Result.failure(Exception("Respuesta vacía del servidor"))
@@ -101,10 +104,12 @@ class AuthRepository(context: Context) {
             putInt(KEY_USER_ID, user?.id ?: 0)
             putString(KEY_USER_NAME, user?.name ?: "")
             putString(KEY_USER_EMAIL, user?.email ?: "")
+            putString(KEY_USER_ROLE, user?.role ?: "cliente") // ✅ Guardar rol
             apply()
         }
     }
 
+    // ✅ Métodos públicos para acceder a la información del usuario
     fun getAuthToken(): String? {
         return prefs.getString(KEY_AUTH_TOKEN, null)
     }
@@ -119,6 +124,14 @@ class AuthRepository(context: Context) {
 
     fun getUserEmail(): String? {
         return prefs.getString(KEY_USER_EMAIL, null)
+    }
+
+    fun getUserRole(): String {
+        return prefs.getString(KEY_USER_ROLE, "cliente") ?: "cliente"
+    }
+
+    fun isAdmin(): Boolean {
+        return getUserRole() == "admin"
     }
 
     fun logout() {

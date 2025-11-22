@@ -15,7 +15,9 @@ import com.example.kkarhua.data.repository.AuthRepository
 class HomeFragment : Fragment() {
 
     private lateinit var btnLogout: Button
+    private lateinit var btnAdminPanel: Button
     private lateinit var titleText: TextView
+    private lateinit var authRepository: AuthRepository
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,14 +30,18 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        authRepository = AuthRepository(requireContext())
+
         setupViews(view)
         setupAnimations()
         setupListeners()
+        checkAdminStatus() // ✅ Verificar si es admin
     }
 
     private fun setupViews(view: View) {
         titleText = view.findViewById(R.id.titleText)
         btnLogout = view.findViewById(R.id.btnLogout)
+        btnAdminPanel = view.findViewById(R.id.btnAdminPanel)
     }
 
     private fun setupAnimations() {
@@ -44,6 +50,10 @@ class HomeFragment : Fragment() {
 
         titleText.startAnimation(fadeIn)
         btnLogout.startAnimation(slideUp)
+
+        if (authRepository.isAdmin()) {
+            btnAdminPanel.startAnimation(slideUp)
+        }
     }
 
     private fun setupListeners() {
@@ -51,14 +61,26 @@ class HomeFragment : Fragment() {
             animateButtonClick(it)
             logout()
         }
+
+        btnAdminPanel.setOnClickListener {
+            animateButtonClick(it)
+            findNavController().navigate(R.id.action_homeFragment_to_adminPanelFragment)
+        }
+    }
+
+    private fun checkAdminStatus() {
+        // ✅ Mostrar botón de Admin Panel solo si el usuario es admin
+        if (authRepository.isAdmin()) {
+            btnAdminPanel.visibility = View.VISIBLE
+        } else {
+            btnAdminPanel.visibility = View.GONE
+        }
     }
 
     private fun logout() {
-        val authRepository = AuthRepository(requireContext())
         authRepository.logout()
-
-        // Navegar de vuelta a Splash eliminando HomeFragment del stack
-        findNavController().popBackStack(R.id.splashFragment, false)
+        // Navegar al splash y limpiar todo el back stack
+        findNavController().navigate(R.id.action_homeFragment_to_splashFragment)
     }
 
     private fun animateButtonClick(view: View) {

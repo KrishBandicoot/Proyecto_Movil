@@ -1,4 +1,4 @@
-package com.example.kkarhua.ui.splash
+package com.example.kkarhua.ui.admin
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -7,17 +7,17 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.kkarhua.R
 import com.example.kkarhua.data.repository.AuthRepository
 
-class SplashFragment : Fragment() {
+class AdminPanelFragment : Fragment() {
 
-    private lateinit var btnLogin: Button
-    private lateinit var btnRegister: Button
     private lateinit var titleText: TextView
-    private lateinit var subtitleText: TextView
+    private lateinit var btnAddProduct: Button
+    private lateinit var btnBackToClient: Button
     private lateinit var authRepository: AuthRepository
 
     override fun onCreateView(
@@ -25,7 +25,7 @@ class SplashFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_splash, container, false)
+        return inflater.inflate(R.layout.fragment_admin_panel, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -33,10 +33,14 @@ class SplashFragment : Fragment() {
 
         authRepository = AuthRepository(requireContext())
 
-        // ✅ Verificar si ya hay sesión activa
-        if (authRepository.isAuthenticated()) {
-            // Usuario ya está logueado, redirigir a Home
-            findNavController().navigate(R.id.action_splashFragment_to_homeFragment)
+        // ✅ Verificar que el usuario es admin
+        if (!authRepository.isAdmin()) {
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Acceso denegado: Solo administradores",
+                Toast.LENGTH_LONG
+            ).show()
+            findNavController().navigateUp()
             return
         }
 
@@ -47,9 +51,8 @@ class SplashFragment : Fragment() {
 
     private fun setupViews(view: View) {
         titleText = view.findViewById(R.id.titleText)
-        subtitleText = view.findViewById(R.id.subtitleText)
-        btnLogin = view.findViewById(R.id.btnLogin)
-        btnRegister = view.findViewById(R.id.btnRegister)
+        btnAddProduct = view.findViewById(R.id.btnAddProduct)
+        btnBackToClient = view.findViewById(R.id.btnBackToClient)
     }
 
     private fun setupAnimations() {
@@ -57,24 +60,23 @@ class SplashFragment : Fragment() {
         val slideUp = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up)
 
         titleText.startAnimation(fadeIn)
-        subtitleText.startAnimation(fadeIn)
-        btnLogin.startAnimation(slideUp)
-        btnRegister.startAnimation(slideUp)
+        btnAddProduct.startAnimation(slideUp)
+        btnBackToClient.startAnimation(slideUp)
     }
 
     private fun setupListeners() {
-        btnLogin.setOnClickListener {
-            animateButtonClick(it)
-            findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+        btnAddProduct.setOnClickListener {
+            animateButton(it)
+            findNavController().navigate(R.id.action_adminPanelFragment_to_addProductFragment)
         }
 
-        btnRegister.setOnClickListener {
-            animateButtonClick(it)
-            findNavController().navigate(R.id.action_splashFragment_to_registerFragment)
+        btnBackToClient.setOnClickListener {
+            animateButton(it)
+            findNavController().navigate(R.id.action_adminPanelFragment_to_homeFragment)
         }
     }
 
-    private fun animateButtonClick(view: View) {
+    private fun animateButton(view: View) {
         val animation = AnimationUtils.loadAnimation(requireContext(), R.anim.bounce)
         view.startAnimation(animation)
     }

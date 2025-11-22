@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.kkarhua.R
 import com.example.kkarhua.data.local.AppDatabase
+import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.data.repository.ProductRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,6 +42,7 @@ class AddProductFragment : Fragment() {
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var productRepository: ProductRepository
+    private lateinit var authRepository: AuthRepository
 
     private var selectedImageUri: Uri? = null
 
@@ -66,6 +68,19 @@ class AddProductFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        authRepository = AuthRepository(requireContext())
+
+        // ✅ VALIDACIÓN: Solo admins pueden agregar productos
+        if (!authRepository.isAdmin()) {
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Acceso denegado: Solo administradores pueden agregar productos",
+                Toast.LENGTH_LONG
+            ).show()
+            findNavController().navigateUp()
+            return
+        }
 
         setupViews(view)
         setupRepository()

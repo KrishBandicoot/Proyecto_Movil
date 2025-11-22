@@ -8,8 +8,9 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:kJUj45sO/"
-    private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:Ilv8KuLd/"
+    // ✅ URLs ACTUALIZADAS
+    private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:2bSFBtEo/"
+    private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:YeqJmQI7/"
 
     private val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {

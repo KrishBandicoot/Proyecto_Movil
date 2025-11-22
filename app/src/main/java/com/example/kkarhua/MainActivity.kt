@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.homeFragment,
                 R.id.productListFragment,
                 R.id.cartFragment,
-                R.id.addProductFragment
+                R.id.adminPanelFragment // ✅ Agregado
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -61,23 +61,20 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
-                R.id.navigation_add_product -> {
-                    if (navController.currentDestination?.id != R.id.addProductFragment) {
-                        navController.navigate(R.id.addProductFragment)
-                    }
-                    true
-                }
+                // ✅ Eliminamos el botón de agregar producto del BottomNav
                 else -> false
             }
         }
 
         // Ocultar/Mostrar BottomNav según la pantalla actual
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            // Fragmentos donde NO debe aparecer el BottomNav
+            // ✅ Fragmentos donde NO debe aparecer el BottomNav
             val hideBottomNavFragments = setOf(
                 R.id.splashFragment,
                 R.id.loginFragment,
-                R.id.registerFragment
+                R.id.registerFragment,
+                R.id.adminPanelFragment,  // ✅ Ocultar en panel admin
+                R.id.addProductFragment   // ✅ Ocultar al agregar producto
             )
 
             if (destination.id in hideBottomNavFragments) {
@@ -91,7 +88,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.homeFragment -> bottomNav.selectedItemId = R.id.navigation_home
                 R.id.productListFragment -> bottomNav.selectedItemId = R.id.navigation_dashboard
                 R.id.cartFragment -> bottomNav.selectedItemId = R.id.navigation_notifications
-                R.id.addProductFragment -> bottomNav.selectedItemId = R.id.navigation_add_product
             }
         }
     }
