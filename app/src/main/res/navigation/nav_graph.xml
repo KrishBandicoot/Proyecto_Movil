@@ -56,7 +56,6 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
-        <!-- ✅ NUEVA ACCIÓN: Ir a Panel Admin -->
         <action
             android:id="@+id/action_homeFragment_to_adminPanelFragment"
             app:destination="@id/adminPanelFragment"
@@ -64,7 +63,6 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
-        <!-- ✅ ACCIÓN: Logout - Volver a Splash -->
         <action
             android:id="@+id/action_homeFragment_to_splashFragment"
             app:destination="@id/splashFragment"
@@ -72,7 +70,7 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- ✅ NUEVO: Admin Panel Fragment -->
+    <!-- Admin Panel Fragment -->
     <fragment
         android:id="@+id/adminPanelFragment"
         android:name="com.example.kkarhua.ui.admin.AdminPanelFragment"
@@ -89,6 +87,37 @@
             app:destination="@id/homeFragment"
             app:popUpTo="@id/homeFragment"
             app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_adminPanelFragment_to_manageProductsFragment"
+            app:destination="@id/manageProductsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Manage Products Fragment -->
+    <fragment
+        android:id="@+id/manageProductsFragment"
+        android:name="com.example.kkarhua.ui.admin.ManageProductsFragment"
+        android:label="Gestionar Productos">
+        <action
+            android:id="@+id/action_manageProductsFragment_to_editProductFragment"
+            app:destination="@id/editProductFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Edit Product Fragment -->
+    <fragment
+        android:id="@+id/editProductFragment"
+        android:name="com.example.kkarhua.ui.admin.EditProductFragment"
+        android:label="Editar Producto">
+        <argument
+            android:name="productId"
+            app:argType="string" />
     </fragment>
 
     <!-- Product List Fragment -->
@@ -106,7 +135,6 @@
         <action
             android:id="@+id/action_productListFragment_to_cartFragment"
             app:destination="@id/cartFragment" />
-        <!-- NOTA: Eliminamos la navegación directa desde ProductList a AddProduct -->
     </fragment>
 
     <!-- Product Detail Fragment -->
@@ -119,7 +147,7 @@
             app:argType="string" />
     </fragment>
 
-    <!-- Add Product Fragment (Solo accesible desde Admin Panel) -->
+    <!-- Add Product Fragment -->
     <fragment
         android:id="@+id/addProductFragment"
         android:name="com.example.kkarhua.ui.products.AddProductFragment"

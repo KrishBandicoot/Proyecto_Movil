@@ -40,6 +40,7 @@ class SplashFragment : Fragment() {
             return
         }
 
+        // Si no hay sesión, mostrar botones de login/registro
         setupViews(view)
         setupAnimations()
         setupListeners()

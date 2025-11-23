@@ -4,11 +4,7 @@ import com.google.gson.annotations.SerializedName
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Multipart
-import retrofit2.http.POST
-import retrofit2.http.Part
-import retrofit2.http.Path
+import retrofit2.http.*
 
 interface ApiService {
 
@@ -27,6 +23,22 @@ interface ApiService {
         @Part("stock") stock: RequestBody,
         @Part image: MultipartBody.Part
     ): Response<ProductResponse>
+
+    // ✅ NUEVO: Endpoint para actualizar producto
+    @Multipart
+    @PATCH("product/{id}")
+    suspend fun updateProduct(
+        @Path("id") id: Int,
+        @Part("name") name: RequestBody,
+        @Part("description") description: RequestBody,
+        @Part("price") price: RequestBody,
+        @Part("stock") stock: RequestBody,
+        @Part image: MultipartBody.Part?  // Opcional - solo si se cambia la imagen
+    ): Response<ProductResponse>
+
+    // ✅ NUEVO: Endpoint para eliminar producto
+    @DELETE("product/{id}")
+    suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
 }
 
 // Modelo principal de respuesta de producto

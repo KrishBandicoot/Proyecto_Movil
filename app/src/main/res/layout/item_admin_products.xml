@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/imgProduct"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/product_image"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txtProductName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Nombre del Producto"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/imgProduct"
+            app:layout_constraintTop_toTopOf="@+id/imgProduct" />
+
+        <TextView
+            android:id="@+id/txtProductPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/purple_700"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toEndOf="@+id/imgProduct"
+            app:layout_constraintTop_toBottomOf="@+id/txtProductName" />
+
+        <TextView
+            android:id="@+id/txtProductStock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stock: 0"
+            android:textSize="14sp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toEndOf="@+id/imgProduct"
+            app:layout_constraintTop_toBottomOf="@+id/txtProductPrice" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imgProduct">
+
+            <Button
+                android:id="@+id/btnEdit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="✏️ Editar"
+                android:textSize="14sp"
+                android:backgroundTint="@color/purple_500" />
+
+            <Button
+                android:id="@+id/btnDelete"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🗑️ Eliminar"
+                android:textSize="14sp"
+                android:backgroundTint="@android:color/holo_red_light" />
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

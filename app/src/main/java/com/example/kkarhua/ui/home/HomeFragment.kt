@@ -1,6 +1,7 @@
 package com.example.kkarhua.ui.home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.kkarhua.R
 import com.example.kkarhua.data.repository.AuthRepository
+import android.widget.Toast
 
 class HomeFragment : Fragment() {
 
@@ -18,6 +20,10 @@ class HomeFragment : Fragment() {
     private lateinit var btnAdminPanel: Button
     private lateinit var titleText: TextView
     private lateinit var authRepository: AuthRepository
+
+    companion object {
+        private const val TAG = "HomeFragment"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,7 +41,7 @@ class HomeFragment : Fragment() {
         setupViews(view)
         setupAnimations()
         setupListeners()
-        checkAdminStatus() // ✅ Verificar si es admin
+        checkAdminStatus()
     }
 
     private fun setupViews(view: View) {
@@ -69,18 +75,47 @@ class HomeFragment : Fragment() {
     }
 
     private fun checkAdminStatus() {
-        // ✅ Mostrar botón de Admin Panel solo si el usuario es admin
-        if (authRepository.isAdmin()) {
+        val role = authRepository.getUserRole()
+        val isAdmin = authRepository.isAdmin()
+
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "CHECK ADMIN STATUS EN HOME")
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "Usuario autenticado: ${authRepository.isAuthenticated()}")
+        Log.d(TAG, "Nombre: ${authRepository.getUserName()}")
+        Log.d(TAG, "Email: ${authRepository.getUserEmail()}")
+        Log.d(TAG, "Rol del usuario: '$role'")
+        Log.d(TAG, "Es admin: $isAdmin")
+        Log.d(TAG, "Botón existe: ${::btnAdminPanel.isInitialized}")
+        Log.d(TAG, "========================================")
+
+        if (isAdmin) {
+            Log.d(TAG, "✓ MOSTRANDO BOTÓN DE ADMIN")
             btnAdminPanel.visibility = View.VISIBLE
         } else {
+            Log.d(TAG, "✗ OCULTANDO BOTÓN DE ADMIN")
             btnAdminPanel.visibility = View.GONE
         }
     }
 
     private fun logout() {
+        Log.d(TAG, "→ Cerrando sesión")
         authRepository.logout()
-        // Navegar al splash y limpiar todo el back stack
-        findNavController().navigate(R.id.action_homeFragment_to_splashFragment)
+
+        Toast.makeText(
+            requireContext(),
+            "✓ Sesión cerrada",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        // ✅ Navegar a splash y limpiar TODO el back stack
+        findNavController().navigate(
+            R.id.splashFragment,
+            null,
+            androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true) // Limpia todo el back stack
+                .build()
+        )
     }
 
     private fun animateButtonClick(view: View) {

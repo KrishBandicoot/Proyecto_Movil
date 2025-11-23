@@ -17,6 +17,7 @@ class AdminPanelFragment : Fragment() {
 
     private lateinit var titleText: TextView
     private lateinit var btnAddProduct: Button
+    private lateinit var btnManageProducts: Button
     private lateinit var btnBackToClient: Button
     private lateinit var authRepository: AuthRepository
 
@@ -52,6 +53,7 @@ class AdminPanelFragment : Fragment() {
     private fun setupViews(view: View) {
         titleText = view.findViewById(R.id.titleText)
         btnAddProduct = view.findViewById(R.id.btnAddProduct)
+        btnManageProducts = view.findViewById(R.id.btnManageProducts)
         btnBackToClient = view.findViewById(R.id.btnBackToClient)
     }
 
@@ -61,6 +63,7 @@ class AdminPanelFragment : Fragment() {
 
         titleText.startAnimation(fadeIn)
         btnAddProduct.startAnimation(slideUp)
+        btnManageProducts.startAnimation(slideUp)
         btnBackToClient.startAnimation(slideUp)
     }
 
@@ -68,6 +71,11 @@ class AdminPanelFragment : Fragment() {
         btnAddProduct.setOnClickListener {
             animateButton(it)
             findNavController().navigate(R.id.action_adminPanelFragment_to_addProductFragment)
+        }
+
+        btnManageProducts.setOnClickListener {
+            animateButton(it)
+            findNavController().navigate(R.id.action_adminPanelFragment_to_manageProductsFragment)
         }
 
         btnBackToClient.setOnClickListener {

@@ -20,6 +20,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        android.util.Log.d("MainActivity", "========================================")
+        android.util.Log.d("MainActivity", "APP INICIADA")
+        android.util.Log.d("MainActivity", "========================================")
+
         setupNavigation()
     }
 

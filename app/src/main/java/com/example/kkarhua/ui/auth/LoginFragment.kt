@@ -1,6 +1,7 @@
 package com.example.kkarhua.ui.auth
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -33,6 +34,10 @@ class LoginFragment : Fragment() {
     private lateinit var authViewModel: AuthViewModel
     private lateinit var authRepository: AuthRepository
 
+    companion object {
+        private const val TAG = "LoginFragment"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -61,7 +66,6 @@ class LoginFragment : Fragment() {
         tilPassword = view.findViewById(R.id.tilPassword)
         progressBar = view.findViewById(R.id.progressBar)
 
-        // Deshabilitar autofill para evitar Samsung Pass
         etEmail.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
         etPassword.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
     }
@@ -123,20 +127,35 @@ class LoginFragment : Fragment() {
 
         authViewModel.loginSuccess.observe(viewLifecycleOwner) { authResponse ->
             authResponse?.let {
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "LOGIN SUCCESS OBSERVER")
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "AuthResponse recibido: ${it != null}")
+                Log.d(TAG, "User data: ${it.user}")
+                Log.d(TAG, "User name: ${it.user?.name}")
+                Log.d(TAG, "User email: ${it.user?.email}")
+                Log.d(TAG, "User role: ${it.user?.role}")
+                Log.d(TAG, "========================================")
+
                 val userName = it.user?.name ?: "Usuario"
+                val userRole = it.user?.role ?: "member"
+
                 Toast.makeText(
                     requireContext(),
-                    "✓ Bienvenido $userName!",
+                    "✓ Bienvenido $userName! (Rol: $userRole)",
                     Toast.LENGTH_LONG
                 ).show()
 
                 authViewModel.clearSuccessEvents()
+
+                // Navegar a home
                 findNavController().navigate(R.id.homeFragment)
             }
         }
 
         authViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.let {
+                Log.e(TAG, "Error en login: $it")
                 Toast.makeText(
                     requireContext(),
                     "✗ $it",
@@ -155,6 +174,8 @@ class LoginFragment : Fragment() {
     private fun attemptLogin() {
         val email = etEmail.text.toString()
         val password = etPassword.text.toString()
+
+        Log.d(TAG, "Intentando login con email: $email")
 
         val emailValidation = ValidationUtils.validateEmail(email)
         val passwordValidation = ValidationUtils.validatePassword(password)

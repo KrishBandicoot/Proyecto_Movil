@@ -174,4 +174,79 @@ class ProductRepository(private val productDao: ProductDao) {
             Result.failure(e)
         }
     }
+
+    // ✅ NUEVO: Actualizar producto en la API
+    suspend fun updateProductInApi(
+        productId: Int,
+        name: String,
+        description: String,
+        price: Double,
+        stock: Int,
+        imageFile: File?  // Null si no se cambia la imagen
+    ): Result<Product> {
+        return try {
+            val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
+            val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
+            val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val stockBody = stock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+
+            val imagePart: MultipartBody.Part? = imageFile?.let {
+                if (it.exists()) {
+                    val requestFile = it.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("image", it.name, requestFile)
+                } else {
+                    null
+                }
+            }
+
+            val response = apiService.updateProduct(
+                id = productId,
+                name = nameBody,
+                description = descriptionBody,
+                price = priceBody,
+                stock = stockBody,
+                image = imagePart
+            )
+
+            when {
+                response.isSuccessful && response.body() != null -> {
+                    val productResponse = response.body()!!
+                    val imageUrl = productResponse.image.getImageUrl()
+
+                    val product = Product(
+                        id = productResponse.id.toString(),
+                        name = productResponse.name,
+                        description = productResponse.description,
+                        price = productResponse.price,
+                        image = imageUrl,
+                        stock = productResponse.stock
+                    )
+
+                    insertProduct(product)
+                    Result.success(product)
+                }
+                else -> {
+                    Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+                }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ✅ NUEVO: Eliminar producto de la API
+    suspend fun deleteProductFromApi(productId: Int): Result<Unit> {
+        return try {
+            val response = apiService.deleteProduct(productId)
+
+            if (response.isSuccessful) {
+                deleteProduct(productId.toString())
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Error ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
