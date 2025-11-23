@@ -6,8 +6,8 @@ import com.google.gson.annotations.SerializedName
 data class SignupRequest(
     val name: String,
     val email: String,
-    val password: String,
-    val role: String = "cliente" // ✅ Rol por defecto: cliente
+    val password: String
+    // ✅ NO enviamos role - Xano lo asigna automáticamente con el default "member"
 )
 
 data class LoginRequest(
@@ -33,7 +33,7 @@ data class UserData(
     val id: Int,
     val name: String,
     val email: String,
-    val role: String? = "cliente", // ✅ Rol del usuario
+    val role: String? = "member", // ✅ Rol del usuario
 
     @SerializedName("created_at")
     val created_at: Long? = null
@@ -43,7 +43,7 @@ data class MeResponse(
     val id: Int,
     val name: String,
     val email: String,
-    val role: String? = "cliente", // ✅ Rol del usuario
+    val role: String? = "member", // ✅ Rol del usuario
 
     @SerializedName("created_at")
     val created_at: Long? = null

@@ -1,6 +1,7 @@
 package com.example.kkarhua.ui.auth
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,10 @@ class RegisterFragment : Fragment() {
     private lateinit var txtLogin: TextView
     private lateinit var progressBar: ProgressBar
     private lateinit var authViewModel: AuthViewModel
+
+    companion object {
+        private const val TAG = "RegisterFragment"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -129,6 +134,10 @@ class RegisterFragment : Fragment() {
         authViewModel.signupSuccess.observe(viewLifecycleOwner) { authResponse ->
             authResponse?.let {
                 val userName = it.user?.name ?: "Usuario"
+                val userRole = it.user?.role ?: "member"
+
+                Log.d(TAG, "✅ Registro exitoso - Usuario: $userName, Rol: $userRole")
+
                 Toast.makeText(
                     requireContext(),
                     "✓ Registro exitoso\n¡Bienvenido $userName!",
@@ -142,6 +151,8 @@ class RegisterFragment : Fragment() {
 
         authViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.let {
+                Log.e(TAG, "❌ Error en registro: $it")
+
                 Toast.makeText(
                     requireContext(),
                     "✗ $it",
@@ -158,10 +169,15 @@ class RegisterFragment : Fragment() {
     }
 
     private fun attemptRegister() {
-        val nombre = etNombre.text.toString()
-        val email = etEmail.text.toString()
+        val nombre = etNombre.text.toString().trim()
+        val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString()
         val confirmPassword = etConfirmPassword.text.toString()
+
+        Log.d(TAG, "🔍 Intentando registrar usuario:")
+        Log.d(TAG, "  - Nombre: $nombre")
+        Log.d(TAG, "  - Email: $email")
+        Log.d(TAG, "  - Password length: ${password.length}")
 
         val nombreValidation = ValidationUtils.validateName(nombre)
         val emailValidation = ValidationUtils.validateEmail(email)
@@ -172,20 +188,25 @@ class RegisterFragment : Fragment() {
             !nombreValidation.isValid -> {
                 etNombre.error = nombreValidation.message
                 etNombre.requestFocus()
+                Log.w(TAG, "⚠️ Validación nombre falló: ${nombreValidation.message}")
             }
             !emailValidation.isValid -> {
                 etEmail.error = emailValidation.message
                 etEmail.requestFocus()
+                Log.w(TAG, "⚠️ Validación email falló: ${emailValidation.message}")
             }
             !passwordValidation.isValid -> {
                 etPassword.error = passwordValidation.message
                 etPassword.requestFocus()
+                Log.w(TAG, "⚠️ Validación password falló: ${passwordValidation.message}")
             }
             !matchValidation.isValid -> {
                 etConfirmPassword.error = matchValidation.message
                 etConfirmPassword.requestFocus()
+                Log.w(TAG, "⚠️ Validación confirmación falló: ${matchValidation.message}")
             }
             else -> {
+                Log.d(TAG, "✅ Todas las validaciones pasaron, iniciando signup...")
                 authViewModel.signup(nombre, email, password)
             }
         }

@@ -20,7 +20,7 @@ class AuthRepository(context: Context) {
 
     suspend fun signup(name: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val request = SignupRequest(name, email, password, role = "cliente") // ✅ Rol cliente
+            val request = SignupRequest(name, email, password, role = "member") // ✅ Rol member
             val response = authService.signup(request)
 
             if (response.isSuccessful) {
@@ -82,7 +82,7 @@ class AuthRepository(context: Context) {
                 val meResponse = response.body()
                 if (meResponse != null) {
                     // ✅ Actualizar rol si cambió
-                    prefs.edit().putString(KEY_USER_ROLE, meResponse.role ?: "cliente").apply()
+                    prefs.edit().putString(KEY_USER_ROLE, meResponse.role ?: "member").apply()
                     Result.success(meResponse)
                 } else {
                     Result.failure(Exception("Respuesta vacía del servidor"))
@@ -104,7 +104,7 @@ class AuthRepository(context: Context) {
             putInt(KEY_USER_ID, user?.id ?: 0)
             putString(KEY_USER_NAME, user?.name ?: "")
             putString(KEY_USER_EMAIL, user?.email ?: "")
-            putString(KEY_USER_ROLE, user?.role ?: "cliente") // ✅ Guardar rol
+            putString(KEY_USER_ROLE, user?.role ?: "member") // ✅ Guardar rol
             apply()
         }
     }
@@ -127,7 +127,7 @@ class AuthRepository(context: Context) {
     }
 
     fun getUserRole(): String {
-        return prefs.getString(KEY_USER_ROLE, "cliente") ?: "cliente"
+        return prefs.getString(KEY_USER_ROLE, "member") ?: "member"
     }
 
     fun isAdmin(): Boolean {

@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ✅ URLs ACTUALIZADAS
     private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:2bSFBtEo/"
     private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:YeqJmQI7/"
 
