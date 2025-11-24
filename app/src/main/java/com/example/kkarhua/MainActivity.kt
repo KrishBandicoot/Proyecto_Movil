@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.homeFragment,
                 R.id.productListFragment,
                 R.id.cartFragment,
-                R.id.adminPanelFragment // ✅ Agregado
+                R.id.adminPanelFragment
             )
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -65,7 +65,6 @@ class MainActivity : AppCompatActivity() {
                     }
                     true
                 }
-                // ✅ Eliminamos el botón de agregar producto del BottomNav
                 else -> false
             }
         }
@@ -77,10 +76,13 @@ class MainActivity : AppCompatActivity() {
                 R.id.splashFragment,
                 R.id.loginFragment,
                 R.id.registerFragment,
-                R.id.adminPanelFragment,     // ✅ Ocultar en panel admin
-                R.id.addProductFragment,     // ✅ Ocultar al agregar producto
-                R.id.manageProductsFragment, // ✅ Ocultar en gestionar productos
-                R.id.editProductFragment     // ✅ NUEVO: Ocultar al editar producto
+                R.id.adminPanelFragment,
+                R.id.addProductFragment,
+                R.id.manageProductsFragment,
+                R.id.editProductFragment,
+                R.id.adminRegisterUserFragment,
+                R.id.manageUsersFragment,  // ✅ NUEVO
+                R.id.editUserFragment       // ✅ NUEVO
             )
 
             if (destination.id in hideBottomNavFragments) {

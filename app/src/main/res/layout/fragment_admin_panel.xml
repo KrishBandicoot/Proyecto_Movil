@@ -33,7 +33,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="280dp" />
+        android:layout_marginBottom="320dp" />
 
     <TextView
         android:id="@+id/subtitleText"
@@ -76,7 +76,7 @@
         app:layout_constraintTop_toBottomOf="@+id/btnAddProduct"
         android:layout_marginTop="16dp" />
 
-    <!-- ✅ NUEVO: Botón para registrar usuarios -->
+    <!-- Botón: Registrar Usuario -->
     <Button
         android:id="@+id/btnRegisterUser"
         android:layout_width="0dp"
@@ -88,6 +88,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnManageProducts"
+        android:layout_marginTop="16dp" />
+
+    <!-- ✅ NUEVO: Botón para gestionar usuarios -->
+    <Button
+        android:id="@+id/btnManageUsers"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="👥 Gestionar Usuarios"
+        android:textSize="18sp"
+        android:padding="20dp"
+        android:backgroundTint="@color/teal_200"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnRegisterUser"
         android:layout_marginTop="16dp" />
 
     <TextView

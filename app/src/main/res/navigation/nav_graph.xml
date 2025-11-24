@@ -94,7 +94,6 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
-        <!-- ✅ NUEVO: Acción para registrar usuarios -->
         <action
             android:id="@+id/action_adminPanelFragment_to_adminRegisterUserFragment"
             app:destination="@id/adminRegisterUserFragment"
@@ -102,9 +101,16 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+        <action
+            android:id="@+id/action_adminPanelFragment_to_manageUsersFragment"
+            app:destination="@id/manageUsersFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- ✅ NUEVO: Admin Register User Fragment -->
+    <!-- Admin Register User Fragment -->
     <fragment
         android:id="@+id/adminRegisterUserFragment"
         android:name="com.example.kkarhua.ui.admin.AdminRegisterUserFragment"
@@ -132,6 +138,30 @@
         <argument
             android:name="productId"
             app:argType="string" />
+    </fragment>
+
+    <!-- Manage Users Fragment -->
+    <fragment
+        android:id="@+id/manageUsersFragment"
+        android:name="com.example.kkarhua.ui.admin.ManageUsersFragment"
+        android:label="Gestionar Usuarios">
+        <action
+            android:id="@+id/action_manageUsersFragment_to_editUserFragment"
+            app:destination="@id/editUserFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Edit User Fragment -->
+    <fragment
+        android:id="@+id/editUserFragment"
+        android:name="com.example.kkarhua.ui.admin.EditUserFragment"
+        android:label="Editar Usuario">
+        <argument
+            android:name="userId"
+            app:argType="integer" />
     </fragment>
 
     <!-- Product List Fragment -->
