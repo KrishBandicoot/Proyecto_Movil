@@ -2,7 +2,6 @@ package com.example.kkarhua.data.repository
 
 import android.util.Log
 import com.example.kkarhua.data.remote.RetrofitClient
-import com.example.kkarhua.data.remote.UpdateUserData
 import com.example.kkarhua.data.remote.UserResponse
 
 class UserRepository(private val authRepository: AuthRepository) {
@@ -24,7 +23,6 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "Endpoint: ${RetrofitClient.userService}")
             Log.d(TAG, "========================================")
 
-            // ✅ Intentando con "Bearer " prefix
             val response = userService.getAllUsers("Bearer $token")
 
             Log.d(TAG, "← Response code: ${response.code()}")
@@ -66,7 +64,6 @@ class UserRepository(private val authRepository: AuthRepository) {
 
             Log.d(TAG, "→ Obteniendo usuario ID: $userId")
 
-            // ✅ Intentando con "Bearer " prefix
             val response = userService.getUserById("Bearer $token", userId)
 
             Log.d(TAG, "← Response code: ${response.code()}")
@@ -117,7 +114,6 @@ class UserRepository(private val authRepository: AuthRepository) {
 
             Log.d(TAG, "Update data: name=$name, email=$email, role=$role, password=${if (password != null) "***" else "null"}")
 
-            // ✅ SOLUCIÓN: Usar el método correcto según si hay contraseña o no
             val response = if (password != null && password.isNotEmpty()) {
                 Log.d(TAG, "→ Actualizando CON nueva contraseña")
                 val updateData = com.example.kkarhua.data.remote.UpdateUserDataWithPassword(
@@ -184,7 +180,6 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
 
-            // ✅ Intentando con "Bearer " prefix
             val response = userService.deleteUser("Bearer $token", userId)
 
             Log.d(TAG, "Response code: ${response.code()}")

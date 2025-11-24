@@ -26,6 +26,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:hint="🔍 Buscar por nombre o correo..."
+        android:textColor="@color/black"
+        android:textColorHint="#666666"
         android:padding="12dp"
         android:background="@android:drawable/editbox_background"
         app:layout_constraintEnd_toEndOf="parent"
