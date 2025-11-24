@@ -5,7 +5,6 @@ import retrofit2.http.*
 
 interface UserService {
 
-    // ✅ ACTUALIZADO: Cambiado de "auth/users" a "users"
     @GET("users")
     suspend fun getAllUsers(
         @Header("Authorization") token: String

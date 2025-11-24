@@ -49,7 +49,6 @@ object RetrofitClient {
         retrofitAuth.create(AuthService::class.java)
     }
 
-    // ✅ NUEVO: Servicio de usuarios
     val userService: UserService by lazy {
         retrofitAuth.create(UserService::class.java)
     }
