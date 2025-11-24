@@ -1,55 +1,75 @@
 package com.example.kkarhua.data.remote
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.*
 
 interface UserService {
 
-    @GET("users")
+    @GET("user")
     suspend fun getAllUsers(
         @Header("Authorization") token: String
     ): Response<List<UserResponse>>
 
-    // ✅ CORREGIDO: Usar user_id como parámetro según lo que espera Xano
-    @GET("users/{user_id}")
+    @GET("user/{user_id}")
     suspend fun getUserById(
         @Header("Authorization") token: String,
         @Path("user_id") userId: Int
     ): Response<UserResponse>
 
-    @PATCH("users/{user_id}")
+    // ✅ SOLUCIÓN: Crear dos métodos separados
+    // Método 1: Para actualizar SIN contraseña
+    @PATCH("user/{user_id}")
     @Headers("Content-Type: application/json")
-    suspend fun updateUser(
+    suspend fun updateUserWithoutPassword(
         @Header("Authorization") token: String,
         @Path("user_id") userId: Int,
-        @Body userData: UpdateUserData
+        @Body userData: UpdateUserDataWithoutPassword
     ): Response<UserResponse>
 
-    @DELETE("users/{user_id}")
+    // Método 2: Para actualizar CON contraseña
+    @PATCH("user/{user_id}")
+    @Headers("Content-Type: application/json")
+    suspend fun updateUserWithPassword(
+        @Header("Authorization") token: String,
+        @Path("user_id") userId: Int,
+        @Body userData: UpdateUserDataWithPassword
+    ): Response<UserResponse>
+
+    @DELETE("user/{user_id}")
     suspend fun deleteUser(
         @Header("Authorization") token: String,
         @Path("user_id") userId: Int
     ): Response<DeleteUserResponse>
+}
 
-// Data classes para usuarios
+// ✅ Data classes FUERA de la interfaz
 data class UserResponse(
     val id: Int,
     val name: String,
     val email: String,
     val role: String,
+
+    @SerializedName("created_at")
     val created_at: Long?
 )
 
-// ✅ CORREGIDO: UpdateUserData sin password opcional
-// Solo enviar los campos que se pueden actualizar
-data class UpdateUserData(
+// ✅ Para actualizar SIN contraseña
+data class UpdateUserDataWithoutPassword(
     val name: String,
     val email: String,
     val role: String
 )
 
-// ✅ NUEVO: Response para DELETE
+// ✅ Para actualizar CON contraseña
+data class UpdateUserDataWithPassword(
+    val name: String,
+    val email: String,
+    val role: String,
+    val password: String
+)
+
 data class DeleteUserResponse(
     val success: Boolean? = true,
     val message: String? = null
-)}
+)

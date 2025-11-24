@@ -17,13 +17,15 @@ class UserRepository(private val authRepository: AuthRepository) {
                 return Result.failure(Exception("No hay sesión activa"))
             }
 
-            Log.d(TAG, "→ Obteniendo usuarios")
-            Log.d(TAG, "  Token: ${token.take(20)}...")
-            Log.d(TAG, "  Intentando endpoint: /users")
+            Log.d(TAG, "========================================")
+            Log.d(TAG, "GET ALL USERS")
+            Log.d(TAG, "========================================")
+            Log.d(TAG, "Token: ${token.take(20)}...")
+            Log.d(TAG, "Endpoint: ${RetrofitClient.userService}")
+            Log.d(TAG, "========================================")
 
-            // ✅ PROBANDO: Primero sin "Bearer", si no funciona prueba con "Bearer "
-            val response = userService.getAllUsers(token)
-            // Si sigue fallando, prueba: userService.getAllUsers("Bearer $token")
+            // ✅ Intentando con "Bearer " prefix
+            val response = userService.getAllUsers("Bearer $token")
 
             Log.d(TAG, "← Response code: ${response.code()}")
 
@@ -31,18 +33,26 @@ class UserRepository(private val authRepository: AuthRepository) {
                 val users = response.body()
                 if (users != null) {
                     Log.d(TAG, "✓ Usuarios obtenidos: ${users.size}")
+                    users.forEach { user ->
+                        Log.d(TAG, "  - ${user.name} (${user.email}) [${user.role}]")
+                    }
+                    Log.d(TAG, "========================================")
                     Result.success(users)
                 } else {
                     Log.e(TAG, "✗ Response body es null")
+                    Log.d(TAG, "========================================")
                     Result.failure(Exception("Response body es null"))
                 }
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(TAG, "✗ Error ${response.code()}: $errorBody")
+                Log.d(TAG, "========================================")
                 Result.failure(Exception("Error ${response.code()}: $errorBody"))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "========================================")
             Log.e(TAG, "✗ Exception: ${e.message}", e)
+            Log.e(TAG, "========================================")
             Result.failure(e)
         }
     }
@@ -56,8 +66,8 @@ class UserRepository(private val authRepository: AuthRepository) {
 
             Log.d(TAG, "→ Obteniendo usuario ID: $userId")
 
-            // ✅ CORREGIDO: Sin "Bearer " prefix
-            val response = userService.getUserById(token, userId)
+            // ✅ Intentando con "Bearer " prefix
+            val response = userService.getUserById("Bearer $token", userId)
 
             Log.d(TAG, "← Response code: ${response.code()}")
 
@@ -85,7 +95,8 @@ class UserRepository(private val authRepository: AuthRepository) {
         userId: Int,
         name: String,
         email: String,
-        role: String
+        role: String,
+        password: String? = null
     ): Result<UserResponse> {
         return try {
             val token = authRepository.getAuthToken()
@@ -100,20 +111,31 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "Name: $name")
             Log.d(TAG, "Email: $email")
             Log.d(TAG, "Role: $role")
+            Log.d(TAG, "Password: ${if (password != null) "Nueva contraseña" else "Sin cambios"}")
             Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
 
-            // ✅ CORREGIDO: Estructura de datos simplificada
-            val updateData = UpdateUserData(
-                name = name,
-                email = email,
-                role = role
-            )
+            Log.d(TAG, "Update data: name=$name, email=$email, role=$role, password=${if (password != null) "***" else "null"}")
 
-            Log.d(TAG, "Update data: $updateData")
-
-            // ✅ CORREGIDO: Sin "Bearer " prefix
-            val response = userService.updateUser(token, userId, updateData)
+            // ✅ SOLUCIÓN: Usar el método correcto según si hay contraseña o no
+            val response = if (password != null && password.isNotEmpty()) {
+                Log.d(TAG, "→ Actualizando CON nueva contraseña")
+                val updateData = com.example.kkarhua.data.remote.UpdateUserDataWithPassword(
+                    name = name,
+                    email = email,
+                    role = role,
+                    password = password
+                )
+                userService.updateUserWithPassword("Bearer $token", userId, updateData)
+            } else {
+                Log.d(TAG, "→ Actualizando SIN cambiar contraseña")
+                val updateData = com.example.kkarhua.data.remote.UpdateUserDataWithoutPassword(
+                    name = name,
+                    email = email,
+                    role = role
+                )
+                userService.updateUserWithoutPassword("Bearer $token", userId, updateData)
+            }
 
             Log.d(TAG, "========================================")
             Log.d(TAG, "RESPONSE")
@@ -162,8 +184,8 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
 
-            // ✅ CORREGIDO: Sin "Bearer " prefix
-            val response = userService.deleteUser(token, userId)
+            // ✅ Intentando con "Bearer " prefix
+            val response = userService.deleteUser("Bearer $token", userId)
 
             Log.d(TAG, "Response code: ${response.code()}")
             Log.d(TAG, "Response message: ${response.message()}")

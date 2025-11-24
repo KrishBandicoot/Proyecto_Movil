@@ -26,8 +26,10 @@ class EditUserFragment : Fragment() {
 
     private lateinit var tilName: TextInputLayout
     private lateinit var tilEmail: TextInputLayout
+    private lateinit var tilPassword: TextInputLayout  // ✅ NUEVO
     private lateinit var etName: TextInputEditText
     private lateinit var etEmail: TextInputEditText
+    private lateinit var etPassword: TextInputEditText  // ✅ NUEVO
     private lateinit var radioGroupRole: RadioGroup
     private lateinit var radioMember: RadioButton
     private lateinit var radioAdmin: RadioButton
@@ -81,8 +83,10 @@ class EditUserFragment : Fragment() {
     private fun setupViews(view: View) {
         tilName = view.findViewById(R.id.tilName)
         tilEmail = view.findViewById(R.id.tilEmail)
+        tilPassword = view.findViewById(R.id.tilPassword)  // ✅ NUEVO
         etName = view.findViewById(R.id.etName)
         etEmail = view.findViewById(R.id.etEmail)
+        etPassword = view.findViewById(R.id.etPassword)  // ✅ NUEVO
         radioGroupRole = view.findViewById(R.id.radioGroupRole)
         radioMember = view.findViewById(R.id.radioMember)
         radioAdmin = view.findViewById(R.id.radioAdmin)
@@ -104,6 +108,17 @@ class EditUserFragment : Fragment() {
         etEmail.addTextChangedListener {
             val result = ValidationUtils.validateEmail(it.toString())
             tilEmail.error = if (result.isValid) null else result.message
+        }
+
+        // ✅ NUEVO: Validación opcional de contraseña
+        etPassword.addTextChangedListener {
+            val password = it.toString()
+            if (password.isNotEmpty()) {
+                val result = ValidationUtils.validatePassword(password)
+                tilPassword.error = if (result.isValid) null else result.message
+            } else {
+                tilPassword.error = null
+            }
         }
     }
 
@@ -160,6 +175,7 @@ class EditUserFragment : Fragment() {
     private fun displayUserData(user: UserResponse) {
         etName.setText(user.name)
         etEmail.setText(user.email)
+        // ✅ NO establecer contraseña (campo vacío = no cambiar)
 
         // Seleccionar rol
         when (user.role) {
@@ -171,6 +187,7 @@ class EditUserFragment : Fragment() {
     private fun attemptUpdateUser() {
         val name = etName.text.toString().trim()
         val email = etEmail.text.toString().trim()
+        val password = etPassword.text.toString().trim()  // ✅ NUEVO
         val role = when (radioGroupRole.checkedRadioButtonId) {
             R.id.radioAdmin -> "admin"
             else -> "member"
@@ -182,6 +199,7 @@ class EditUserFragment : Fragment() {
         Log.d(TAG, "Name: $name")
         Log.d(TAG, "Email: $email")
         Log.d(TAG, "Role: $role")
+        Log.d(TAG, "Password: ${if (password.isEmpty()) "No cambiar" else "Cambiar"}")
         Log.d(TAG, "========================================")
 
         // Validaciones
@@ -199,24 +217,34 @@ class EditUserFragment : Fragment() {
                 etEmail.requestFocus()
                 return
             }
+            password.isNotEmpty() -> {
+                // ✅ Si se ingresó contraseña, validarla
+                val passwordValidation = ValidationUtils.validatePassword(password)
+                if (!passwordValidation.isValid) {
+                    tilPassword.error = passwordValidation.message
+                    etPassword.requestFocus()
+                    return
+                }
+            }
         }
 
-        updateUser(name, email, role)
+        updateUser(name, email, role, password.ifEmpty { null })
     }
 
-    private fun updateUser(name: String, email: String, role: String) {
+    private fun updateUser(name: String, email: String, role: String, password: String?) {
         progressBar.visibility = View.VISIBLE
         btnUpdate.isEnabled = false
         btnUpdate.text = "Actualizando..."
 
         lifecycleScope.launch {
             try {
-                // ✅ CORREGIDO: Sin password
+                // ✅ NUEVO: Pasar password (null si está vacío)
                 val result = userRepository.updateUser(
                     userId = args.userId,
                     name = name,
                     email = email,
-                    role = role
+                    role = role,
+                    password = password
                 )
 
                 result.onSuccess {

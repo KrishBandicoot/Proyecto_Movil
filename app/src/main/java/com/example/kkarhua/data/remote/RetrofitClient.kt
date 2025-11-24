@@ -8,8 +8,10 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
+    // ✅ CORREGIDO: 3 endpoints separados
     private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:2bSFBtEo/"
     private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:YeqJmQI7/"
+    private const val BASE_URL_USERS = "https://x8ki-letl-twmt.n7.xano.io/api:abImCnIy/"
 
     private val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -41,6 +43,15 @@ object RetrofitClient {
             .build()
     }
 
+    // ✅ NUEVO: Retrofit para gestión de usuarios
+    private val retrofitUsers: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_USERS)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
     val apiService: ApiService by lazy {
         retrofitProducts.create(ApiService::class.java)
     }
@@ -49,9 +60,8 @@ object RetrofitClient {
         retrofitAuth.create(AuthService::class.java)
     }
 
-    // ✅ CORREGIDO: UserService debe estar en la MISMA API donde están los endpoints
-    // Según tus capturas de Xano, prueba primero con retrofitAuth
+    // ✅ CORREGIDO: UserService ahora usa el endpoint correcto
     val userService: UserService by lazy {
-        retrofitAuth.create(UserService::class.java)
+        retrofitUsers.create(UserService::class.java)
     }
 }
