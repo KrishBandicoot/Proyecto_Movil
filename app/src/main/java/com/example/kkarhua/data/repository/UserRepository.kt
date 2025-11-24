@@ -21,7 +21,9 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "  Token: ${token.take(20)}...")
             Log.d(TAG, "  Intentando endpoint: /users")
 
+            // ✅ PROBANDO: Primero sin "Bearer", si no funciona prueba con "Bearer "
             val response = userService.getAllUsers(token)
+            // Si sigue fallando, prueba: userService.getAllUsers("Bearer $token")
 
             Log.d(TAG, "← Response code: ${response.code()}")
 
@@ -53,8 +55,8 @@ class UserRepository(private val authRepository: AuthRepository) {
             }
 
             Log.d(TAG, "→ Obteniendo usuario ID: $userId")
-            Log.d(TAG, "  Intentando endpoint: /users/$userId")
 
+            // ✅ CORREGIDO: Sin "Bearer " prefix
             val response = userService.getUserById(token, userId)
 
             Log.d(TAG, "← Response code: ${response.code()}")
@@ -95,7 +97,6 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "UPDATE USER")
             Log.d(TAG, "========================================")
             Log.d(TAG, "User ID: $userId")
-            Log.d(TAG, "Endpoint: /users/$userId")
             Log.d(TAG, "Name: $name")
             Log.d(TAG, "Email: $email")
             Log.d(TAG, "Role: $role")
@@ -111,6 +112,7 @@ class UserRepository(private val authRepository: AuthRepository) {
 
             Log.d(TAG, "Update data: $updateData")
 
+            // ✅ CORREGIDO: Sin "Bearer " prefix
             val response = userService.updateUser(token, userId, updateData)
 
             Log.d(TAG, "========================================")
@@ -157,10 +159,10 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "DELETE USER")
             Log.d(TAG, "========================================")
             Log.d(TAG, "User ID: $userId")
-            Log.d(TAG, "Endpoint: /users/$userId")
             Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
 
+            // ✅ CORREGIDO: Sin "Bearer " prefix
             val response = userService.deleteUser(token, userId)
 
             Log.d(TAG, "Response code: ${response.code()}")
