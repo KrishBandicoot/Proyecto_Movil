@@ -1,6 +1,7 @@
 package com.example.kkarhua.ui.admin
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,10 +26,8 @@ class EditUserFragment : Fragment() {
 
     private lateinit var tilName: TextInputLayout
     private lateinit var tilEmail: TextInputLayout
-    private lateinit var tilPassword: TextInputLayout
     private lateinit var etName: TextInputEditText
     private lateinit var etEmail: TextInputEditText
-    private lateinit var etPassword: TextInputEditText
     private lateinit var radioGroupRole: RadioGroup
     private lateinit var radioMember: RadioButton
     private lateinit var radioAdmin: RadioButton
@@ -39,6 +38,10 @@ class EditUserFragment : Fragment() {
     private lateinit var authRepository: AuthRepository
 
     private var currentUser: UserResponse? = null
+
+    companion object {
+        private const val TAG = "EditUserFragment"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,6 +66,11 @@ class EditUserFragment : Fragment() {
             return
         }
 
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "EDIT USER FRAGMENT CREATED")
+        Log.d(TAG, "User ID: ${args.userId}")
+        Log.d(TAG, "========================================")
+
         setupViews(view)
         setupRepository()
         setupValidation()
@@ -73,10 +81,8 @@ class EditUserFragment : Fragment() {
     private fun setupViews(view: View) {
         tilName = view.findViewById(R.id.tilName)
         tilEmail = view.findViewById(R.id.tilEmail)
-        tilPassword = view.findViewById(R.id.tilPassword)
         etName = view.findViewById(R.id.etName)
         etEmail = view.findViewById(R.id.etEmail)
-        etPassword = view.findViewById(R.id.etPassword)
         radioGroupRole = view.findViewById(R.id.radioGroupRole)
         radioMember = view.findViewById(R.id.radioMember)
         radioAdmin = view.findViewById(R.id.radioAdmin)
@@ -99,16 +105,6 @@ class EditUserFragment : Fragment() {
             val result = ValidationUtils.validateEmail(it.toString())
             tilEmail.error = if (result.isValid) null else result.message
         }
-
-        etPassword.addTextChangedListener {
-            val password = it.toString()
-            if (password.isNotEmpty()) {
-                val result = ValidationUtils.validatePassword(password)
-                tilPassword.error = if (result.isValid) null else result.message
-            } else {
-                tilPassword.error = null
-            }
-        }
     }
 
     private fun setupListeners() {
@@ -124,15 +120,23 @@ class EditUserFragment : Fragment() {
     private fun loadUserData() {
         progressBar.visibility = View.VISIBLE
 
+        Log.d(TAG, "→ Cargando datos del usuario ${args.userId}")
+
         lifecycleScope.launch {
             try {
                 val result = userRepository.getUserById(args.userId)
 
                 result.onSuccess { user ->
+                    Log.d(TAG, "✓ Datos cargados:")
+                    Log.d(TAG, "  Name: ${user.name}")
+                    Log.d(TAG, "  Email: ${user.email}")
+                    Log.d(TAG, "  Role: ${user.role}")
+
                     currentUser = user
                     displayUserData(user)
                     progressBar.visibility = View.GONE
                 }.onFailure { exception ->
+                    Log.e(TAG, "✗ Error al cargar: ${exception.message}")
                     Toast.makeText(
                         requireContext(),
                         "Error al cargar usuario: ${exception.message}",
@@ -142,6 +146,7 @@ class EditUserFragment : Fragment() {
                     findNavController().navigateUp()
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "✗ Exception: ${e.message}", e)
                 Toast.makeText(
                     requireContext(),
                     "Error: ${e.message}",
@@ -166,11 +171,18 @@ class EditUserFragment : Fragment() {
     private fun attemptUpdateUser() {
         val name = etName.text.toString().trim()
         val email = etEmail.text.toString().trim()
-        val password = etPassword.text.toString()
         val role = when (radioGroupRole.checkedRadioButtonId) {
             R.id.radioAdmin -> "admin"
             else -> "member"
         }
+
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "ATTEMPT UPDATE USER")
+        Log.d(TAG, "========================================")
+        Log.d(TAG, "Name: $name")
+        Log.d(TAG, "Email: $email")
+        Log.d(TAG, "Role: $role")
+        Log.d(TAG, "========================================")
 
         // Validaciones
         val nameValidation = ValidationUtils.validateName(name)
@@ -187,35 +199,28 @@ class EditUserFragment : Fragment() {
                 etEmail.requestFocus()
                 return
             }
-            password.isNotEmpty() -> {
-                val passwordValidation = ValidationUtils.validatePassword(password)
-                if (!passwordValidation.isValid) {
-                    tilPassword.error = passwordValidation.message
-                    etPassword.requestFocus()
-                    return
-                }
-            }
         }
 
-        updateUser(name, email, role, password.ifEmpty { null })
+        updateUser(name, email, role)
     }
 
-    private fun updateUser(name: String, email: String, role: String, password: String?) {
+    private fun updateUser(name: String, email: String, role: String) {
         progressBar.visibility = View.VISIBLE
         btnUpdate.isEnabled = false
         btnUpdate.text = "Actualizando..."
 
         lifecycleScope.launch {
             try {
+                // ✅ CORREGIDO: Sin password
                 val result = userRepository.updateUser(
                     userId = args.userId,
                     name = name,
                     email = email,
-                    role = role,
-                    password = password
+                    role = role
                 )
 
                 result.onSuccess {
+                    Log.d(TAG, "✓ Usuario actualizado exitosamente")
                     Toast.makeText(
                         requireContext(),
                         "✓ Usuario actualizado exitosamente",
@@ -223,6 +228,7 @@ class EditUserFragment : Fragment() {
                     ).show()
                     findNavController().navigateUp()
                 }.onFailure { exception ->
+                    Log.e(TAG, "✗ Error: ${exception.message}")
                     Toast.makeText(
                         requireContext(),
                         "✗ Error: ${exception.message}",
@@ -231,6 +237,7 @@ class EditUserFragment : Fragment() {
                     resetButton()
                 }
             } catch (e: Exception) {
+                Log.e(TAG, "✗ Exception: ${e.message}", e)
                 Toast.makeText(
                     requireContext(),
                     "✗ Error inesperado: ${e.message}",

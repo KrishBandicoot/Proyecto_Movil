@@ -49,6 +49,8 @@ object RetrofitClient {
         retrofitAuth.create(AuthService::class.java)
     }
 
+    // ✅ CORREGIDO: UserService debe estar en la MISMA API donde están los endpoints
+    // Según tus capturas de Xano, prueba primero con retrofitAuth
     val userService: UserService by lazy {
         retrofitAuth.create(UserService::class.java)
     }

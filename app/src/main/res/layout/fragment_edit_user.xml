@@ -82,28 +82,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilPassword"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="Nueva contraseña (opcional)"
-            app:startIconDrawable="@android:drawable/ic_lock_lock"
-            app:endIconMode="password_toggle"
-            app:errorEnabled="true"
-            app:helperText="Deja en blanco para mantener la contraseña actual"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilEmail"
-            android:layout_marginTop="16dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPassword"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:padding="16dp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
+        <!-- ✅ REMOVIDO: Campo de contraseña -->
 
         <TextView
             android:id="@+id/txtRoleLabel"
@@ -115,7 +94,7 @@
             android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilPassword"
+            app:layout_constraintTop_toBottomOf="@+id/tilEmail"
             android:layout_marginTop="24dp" />
 
         <RadioGroup
