@@ -267,6 +267,7 @@ class EditProductFragment : Fragment() {
         }
     }
 
+    // ✅ MÉTODO CORREGIDO en EditProductFragment.kt
     private fun updateProductInXano(
         name: String,
         description: String,
@@ -294,12 +295,29 @@ class EditProductFragment : Fragment() {
                     return@launch
                 }
 
-                // Si cambió la imagen, procesarla
+                android.util.Log.d("EditProductFragment", "========================================")
+                android.util.Log.d("EditProductFragment", "UPDATING PRODUCT")
+                android.util.Log.d("EditProductFragment", "========================================")
+                android.util.Log.d("EditProductFragment", "Product ID: $productId")
+                android.util.Log.d("EditProductFragment", "Has image changed: $hasImageChanged")
+                android.util.Log.d("EditProductFragment", "Selected image URI: $selectedImageUri")
+                android.util.Log.d("EditProductFragment", "========================================")
+
+                // ✅ CORREGIDO: Solo crear imageFile si realmente cambió la imagen
                 val imageFile = if (hasImageChanged && selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
-                        createImageFile(requireContext(), selectedImageUri!!)
+                        try {
+                            val file = createImageFile(requireContext(), selectedImageUri!!)
+                            android.util.Log.d("EditProductFragment", "Image file created: ${file?.absolutePath}")
+                            android.util.Log.d("EditProductFragment", "Image file exists: ${file?.exists()}")
+                            file
+                        } catch (e: Exception) {
+                            android.util.Log.e("EditProductFragment", "Error creating image file: ${e.message}", e)
+                            null
+                        }
                     }
                 } else {
+                    android.util.Log.d("EditProductFragment", "No image change - sending null")
                     null
                 }
 
@@ -313,10 +331,15 @@ class EditProductFragment : Fragment() {
                     imageFile = imageFile
                 )
 
-                // Limpiar archivo temporal si existe
+                // ✅ Limpiar archivo temporal si existe
                 imageFile?.let {
                     withContext(Dispatchers.IO) {
-                        it.delete()
+                        try {
+                            it.delete()
+                            android.util.Log.d("EditProductFragment", "Temp file deleted")
+                        } catch (e: Exception) {
+                            android.util.Log.e("EditProductFragment", "Error deleting temp file: ${e.message}")
+                        }
                     }
                 }
 
@@ -329,6 +352,7 @@ class EditProductFragment : Fragment() {
                         ).show()
                         findNavController().navigateUp()
                     }.onFailure { exception ->
+                        android.util.Log.e("EditProductFragment", "Update failed: ${exception.message}", exception)
                         Toast.makeText(
                             requireContext(),
                             "✗ Error: ${exception.message}",
@@ -339,6 +363,7 @@ class EditProductFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
+                android.util.Log.e("EditProductFragment", "Exception in updateProductInXano: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         requireContext(),

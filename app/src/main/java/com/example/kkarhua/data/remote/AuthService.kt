@@ -16,4 +16,11 @@ interface AuthService {
 
     @GET("auth/me")
     suspend fun getMe(@Header("Authorization") token: String): Response<MeResponse>
+
+    // ✅ NUEVO: Registro de usuarios por admin (con rol)
+    @POST("auth/signup")
+    suspend fun adminSignup(
+        @Header("Authorization") token: String,
+        @Body request: AdminSignupRequest
+    ): Response<AuthResponse>
 }

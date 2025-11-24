@@ -33,13 +33,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_marginBottom="200dp" />
+        android:layout_marginBottom="280dp" />
 
     <TextView
         android:id="@+id/subtitleText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Gestiona los productos de tu tienda"
+        android:text="Gestiona productos y usuarios"
         android:textSize="16sp"
         android:textColor="#666666"
         android:gravity="center"
@@ -48,7 +48,7 @@
         app:layout_constraintTop_toBottomOf="@+id/titleText"
         android:layout_marginTop="8dp" />
 
-    <!-- Botón principal: Agregar Producto -->
+    <!-- Botón: Agregar Producto -->
     <Button
         android:id="@+id/btnAddProduct"
         android:layout_width="0dp"
@@ -62,7 +62,7 @@
         app:layout_constraintTop_toBottomOf="@+id/subtitleText"
         android:layout_marginTop="40dp" />
 
-    <!-- ✅ NUEVO: Botón para gestionar productos -->
+    <!-- Botón: Gestionar Productos -->
     <Button
         android:id="@+id/btnManageProducts"
         android:layout_width="0dp"
@@ -74,6 +74,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnAddProduct"
+        android:layout_marginTop="16dp" />
+
+    <!-- ✅ NUEVO: Botón para registrar usuarios -->
+    <Button
+        android:id="@+id/btnRegisterUser"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="👥 Registrar Usuario"
+        android:textSize="18sp"
+        android:padding="20dp"
+        android:backgroundTint="@color/teal_700"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnManageProducts"
         android:layout_marginTop="16dp" />
 
     <TextView

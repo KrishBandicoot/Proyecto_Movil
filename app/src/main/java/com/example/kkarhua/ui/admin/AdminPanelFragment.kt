@@ -18,6 +18,7 @@ class AdminPanelFragment : Fragment() {
     private lateinit var titleText: TextView
     private lateinit var btnAddProduct: Button
     private lateinit var btnManageProducts: Button
+    private lateinit var btnRegisterUser: Button // ✅ NUEVO
     private lateinit var btnBackToClient: Button
     private lateinit var authRepository: AuthRepository
 
@@ -54,6 +55,7 @@ class AdminPanelFragment : Fragment() {
         titleText = view.findViewById(R.id.titleText)
         btnAddProduct = view.findViewById(R.id.btnAddProduct)
         btnManageProducts = view.findViewById(R.id.btnManageProducts)
+        btnRegisterUser = view.findViewById(R.id.btnRegisterUser) // ✅ NUEVO
         btnBackToClient = view.findViewById(R.id.btnBackToClient)
     }
 
@@ -64,6 +66,7 @@ class AdminPanelFragment : Fragment() {
         titleText.startAnimation(fadeIn)
         btnAddProduct.startAnimation(slideUp)
         btnManageProducts.startAnimation(slideUp)
+        btnRegisterUser.startAnimation(slideUp) // ✅ NUEVO
         btnBackToClient.startAnimation(slideUp)
     }
 
@@ -76,6 +79,12 @@ class AdminPanelFragment : Fragment() {
         btnManageProducts.setOnClickListener {
             animateButton(it)
             findNavController().navigate(R.id.action_adminPanelFragment_to_manageProductsFragment)
+        }
+
+        // ✅ NUEVO: Navegar a registro de usuarios
+        btnRegisterUser.setOnClickListener {
+            animateButton(it)
+            findNavController().navigate(R.id.action_adminPanelFragment_to_adminRegisterUserFragment)
         }
 
         btnBackToClient.setOnClickListener {

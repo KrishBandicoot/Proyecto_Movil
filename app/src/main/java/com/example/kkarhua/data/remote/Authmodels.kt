@@ -7,12 +7,19 @@ data class SignupRequest(
     val name: String,
     val email: String,
     val password: String
-    // ✅ NO enviamos role - Xano lo asigna automáticamente con el default "member"
 )
 
 data class LoginRequest(
     val email: String,
     val password: String
+)
+
+// ✅ NUEVO: Request para registro por admin (incluye rol)
+data class AdminSignupRequest(
+    val name: String,
+    val email: String,
+    val password: String,
+    val role: String  // "admin" o "member"
 )
 
 // Response models
@@ -33,7 +40,7 @@ data class UserData(
     val id: Int,
     val name: String,
     val email: String,
-    val role: String? = "member", // ✅ Rol del usuario
+    val role: String? = "member",
 
     @SerializedName("created_at")
     val created_at: Long? = null
@@ -43,7 +50,7 @@ data class MeResponse(
     val id: Int,
     val name: String,
     val email: String,
-    val role: String? = "member", // ✅ Rol del usuario
+    val role: String? = "member",
 
     @SerializedName("created_at")
     val created_at: Long? = null

@@ -43,6 +43,28 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
+    // ✅ NUEVO: Agregar este método a AuthViewModel.kt (después del método signup existente)
+
+    fun adminSignup(name: String, email: String, password: String, role: String) = viewModelScope.launch {
+        try {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            val result = repository.adminSignup(name, email, password, role)
+
+            result.onSuccess { authResponse ->
+                _signupSuccess.value = authResponse
+            }.onFailure { exception ->
+                _errorMessage.value = exception.message ?: "Error al crear usuario"
+            }
+
+            _isLoading.value = false
+        } catch (e: Exception) {
+            _errorMessage.value = e.message ?: "Error inesperado"
+            _isLoading.value = false
+        }
+    }
+
     fun login(email: String, password: String) = viewModelScope.launch {
         try {
             _isLoading.value = true

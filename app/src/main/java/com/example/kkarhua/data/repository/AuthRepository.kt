@@ -42,6 +42,40 @@ class AuthRepository(context: Context) {
         }
     }
 
+    // ✅ NUEVO: Agregar este método a AuthRepository.kt (después del método signup existente)
+
+    suspend fun adminSignup(name: String, email: String, password: String, role: String): Result<AuthResponse> {
+        return try {
+            val token = getAuthToken()
+            if (token == null) {
+                return Result.failure(Exception("No hay sesión de administrador activa"))
+            }
+
+            val request = AdminSignupRequest(name, email, password, role)
+            val response = authService.adminSignup("Bearer $token", request)
+
+            if (response.isSuccessful) {
+                val authResponse = response.body()
+                if (authResponse != null) {
+                    Log.d(TAG, "✓ Usuario creado por admin exitosamente")
+                    Log.d(TAG, "  - Name: ${authResponse.user?.name}")
+                    Log.d(TAG, "  - Email: ${authResponse.user?.email}")
+                    Log.d(TAG, "  - Role: ${authResponse.user?.role}")
+                    Result.success(authResponse)
+                } else {
+                    Result.failure(Exception("Response body es null"))
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "✗ Error al crear usuario: $errorBody")
+                Result.failure(Exception("Error ${response.code()}: $errorBody"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "✗ Exception en adminSignup: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             val request = LoginRequest(email, password)

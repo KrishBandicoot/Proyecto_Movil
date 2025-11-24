@@ -21,25 +21,46 @@ interface ApiService {
         @Part("description") description: RequestBody,
         @Part("price") price: RequestBody,
         @Part("stock") stock: RequestBody,
-        @Part("category") category: RequestBody, // ✅ NUEVO
+        @Part("category") category: RequestBody,
         @Part image: MultipartBody.Part
     ): Response<ProductResponse>
 
-    @Multipart
+    // ✅ SOLUCIÓN: Actualizar producto con data class
     @PATCH("product/{id}")
+    @Headers("Content-Type: application/json")
     suspend fun updateProduct(
         @Path("id") id: Int,
-        @Part("name") name: RequestBody,
-        @Part("description") description: RequestBody,
-        @Part("price") price: RequestBody,
-        @Part("stock") stock: RequestBody,
-        @Part("category") category: RequestBody, // ✅ NUEVO
-        @Part image: MultipartBody.Part?
+        @Body productData: UpdateProductData
     ): Response<ProductResponse>
 
     @DELETE("product/{id}")
     suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
 }
+
+// ✅ Data class para actualizar productos
+data class UpdateProductData(
+    val name: String,
+    val description: String,
+    val price: Double,
+    val stock: Int,
+    val category: String,
+    val image: ImageUpdateData? = null
+)
+
+data class ImageUpdateData(
+    val path: String,
+    val name: String,
+    val type: String,
+    val size: Int,
+    val mime: String,
+    val url: String,
+    val meta: ImageMetaUpdate
+)
+
+data class ImageMetaUpdate(
+    val width: Int,
+    val height: Int
+)
 
 data class ProductResponse(
     val id: Int,
@@ -51,7 +72,7 @@ data class ProductResponse(
     val description: String,
     val price: Double,
     val stock: Int,
-    val category: String, // ✅ NUEVO
+    val category: String,
 
     @SerializedName("updated_at")
     val updatedAt: Long?,
