@@ -23,13 +23,13 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="8dp" />
 
         <TextView
             android:id="@+id/subtitleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Modifica los datos del usuario"
+            android:text="Edita solo los campos que necesites cambiar"
             android:textSize="14sp"
             android:textColor="#666666"
             android:gravity="center"
@@ -82,7 +82,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ✅ NUEVO: Campo de contraseña (opcional) -->
+        <!-- ✅ MEJORADO: Campo de contraseña con texto de ayuda más claro -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPassword"
             android:layout_width="0dp"
@@ -91,7 +91,8 @@
             app:startIconDrawable="@android:drawable/ic_lock_lock"
             app:endIconMode="password_toggle"
             app:errorEnabled="true"
-            app:helperText="Dejar vacío para no cambiar"
+            app:helperText="Déjalo vacío para mantener la contraseña actual"
+            app:helperTextTextColor="#2196F3"
             app:helperTextEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -107,6 +108,21 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- ✅ NUEVO: Recordatorio de requisitos de contraseña -->
+        <TextView
+            android:id="@+id/txtPasswordHint"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="💡 Si cambias la contraseña: mínimo 8 caracteres, al menos 1 letra y 1 número"
+            android:textSize="12sp"
+            android:textColor="#666666"
+            android:padding="8dp"
+            android:background="#F5F5F5"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tilPassword"
+            android:layout_marginTop="8dp" />
+
         <TextView
             android:id="@+id/txtRoleLabel"
             android:layout_width="0dp"
@@ -117,7 +133,7 @@
             android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilPassword"
+            app:layout_constraintTop_toBottomOf="@+id/txtPasswordHint"
             android:layout_marginTop="24dp" />
 
         <RadioGroup

@@ -26,10 +26,10 @@ class EditUserFragment : Fragment() {
 
     private lateinit var tilName: TextInputLayout
     private lateinit var tilEmail: TextInputLayout
-    private lateinit var tilPassword: TextInputLayout  // ✅ NUEVO
+    private lateinit var tilPassword: TextInputLayout
     private lateinit var etName: TextInputEditText
     private lateinit var etEmail: TextInputEditText
-    private lateinit var etPassword: TextInputEditText  // ✅ NUEVO
+    private lateinit var etPassword: TextInputEditText
     private lateinit var radioGroupRole: RadioGroup
     private lateinit var radioMember: RadioButton
     private lateinit var radioAdmin: RadioButton
@@ -83,10 +83,10 @@ class EditUserFragment : Fragment() {
     private fun setupViews(view: View) {
         tilName = view.findViewById(R.id.tilName)
         tilEmail = view.findViewById(R.id.tilEmail)
-        tilPassword = view.findViewById(R.id.tilPassword)  // ✅ NUEVO
+        tilPassword = view.findViewById(R.id.tilPassword)
         etName = view.findViewById(R.id.etName)
         etEmail = view.findViewById(R.id.etEmail)
-        etPassword = view.findViewById(R.id.etPassword)  // ✅ NUEVO
+        etPassword = view.findViewById(R.id.etPassword)
         radioGroupRole = view.findViewById(R.id.radioGroupRole)
         radioMember = view.findViewById(R.id.radioMember)
         radioAdmin = view.findViewById(R.id.radioAdmin)
@@ -110,15 +110,11 @@ class EditUserFragment : Fragment() {
             tilEmail.error = if (result.isValid) null else result.message
         }
 
-        // ✅ NUEVO: Validación opcional de contraseña
+        // ✅ VALIDACIÓN OPCIONAL: Solo valida si hay texto
         etPassword.addTextChangedListener {
             val password = it.toString()
-            if (password.isNotEmpty()) {
-                val result = ValidationUtils.validatePassword(password)
-                tilPassword.error = if (result.isValid) null else result.message
-            } else {
-                tilPassword.error = null
-            }
+            val result = ValidationUtils.validatePasswordOptional(password)
+            tilPassword.error = if (result.isValid) null else result.message
         }
     }
 
@@ -175,7 +171,7 @@ class EditUserFragment : Fragment() {
     private fun displayUserData(user: UserResponse) {
         etName.setText(user.name)
         etEmail.setText(user.email)
-        // ✅ NO establecer contraseña (campo vacío = no cambiar)
+        // ✅ Campo de contraseña vacío por defecto
 
         // Seleccionar rol
         when (user.role) {
@@ -187,7 +183,7 @@ class EditUserFragment : Fragment() {
     private fun attemptUpdateUser() {
         val name = etName.text.toString().trim()
         val email = etEmail.text.toString().trim()
-        val password = etPassword.text.toString().trim()  // ✅ NUEVO
+        val password = etPassword.text.toString().trim()
         val role = when (radioGroupRole.checkedRadioButtonId) {
             R.id.radioAdmin -> "admin"
             else -> "member"
@@ -199,12 +195,13 @@ class EditUserFragment : Fragment() {
         Log.d(TAG, "Name: $name")
         Log.d(TAG, "Email: $email")
         Log.d(TAG, "Role: $role")
-        Log.d(TAG, "Password: ${if (password.isEmpty()) "No cambiar" else "Cambiar"}")
+        Log.d(TAG, "Password: ${if (password.isEmpty()) "No cambiar" else "Cambiar (${password.length} caracteres)"}")
         Log.d(TAG, "========================================")
 
-        // Validaciones
+        // ✅ VALIDACIÓN INDIVIDUAL: Solo valida los campos que se van a cambiar
         val nameValidation = ValidationUtils.validateName(name)
         val emailValidation = ValidationUtils.validateEmail(email)
+        val passwordValidation = ValidationUtils.validatePasswordOptional(password)
 
         when {
             !nameValidation.isValid -> {
@@ -217,17 +214,15 @@ class EditUserFragment : Fragment() {
                 etEmail.requestFocus()
                 return
             }
-            password.isNotEmpty() -> {
-                // ✅ Si se ingresó contraseña, validarla
-                val passwordValidation = ValidationUtils.validatePassword(password)
-                if (!passwordValidation.isValid) {
-                    tilPassword.error = passwordValidation.message
-                    etPassword.requestFocus()
-                    return
-                }
+            !passwordValidation.isValid -> {
+                // ✅ Si hay contraseña pero no es válida
+                tilPassword.error = passwordValidation.message
+                etPassword.requestFocus()
+                return
             }
         }
 
+        // ✅ ACTUALIZACIÓN FLEXIBLE: Solo envía contraseña si se ingresó algo
         updateUser(name, email, role, password.ifEmpty { null })
     }
 
@@ -238,7 +233,6 @@ class EditUserFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // ✅ NUEVO: Pasar password (null si está vacío)
                 val result = userRepository.updateUser(
                     userId = args.userId,
                     name = name,

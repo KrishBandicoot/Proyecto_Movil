@@ -13,15 +13,29 @@ object ValidationUtils {
         }
     }
 
+    // ✅ VALIDACIÓN MEJORADA: Mínimo 8 caracteres, al menos una letra y un número
     fun validatePassword(password: String): ValidationResult {
         return when {
             password.isBlank() -> ValidationResult(false, "La contraseña es requerida")
-            password.length < 6 ->
-                ValidationResult(false, "Debe tener al menos 6 caracteres")
+            password.length < 8 ->
+                ValidationResult(false, "Debe tener al menos 8 caracteres")
+            !password.any { it.isLetter() } ->
+                ValidationResult(false, "Debe contener al menos una letra")
             !password.any { it.isDigit() } ->
                 ValidationResult(false, "Debe contener al menos un número")
             else -> ValidationResult(true)
         }
+    }
+
+    // ✅ NUEVA: Validación opcional de contraseña (para edición)
+    fun validatePasswordOptional(password: String): ValidationResult {
+        // Si está vacía, es válido (no se va a cambiar)
+        if (password.isEmpty()) {
+            return ValidationResult(true)
+        }
+
+        // Si tiene contenido, aplicar validación completa
+        return validatePassword(password)
     }
 
     fun validateName(name: String): ValidationResult {
