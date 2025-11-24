@@ -21,10 +21,10 @@ interface ApiService {
         @Part("description") description: RequestBody,
         @Part("price") price: RequestBody,
         @Part("stock") stock: RequestBody,
+        @Part("category") category: RequestBody, // ✅ NUEVO
         @Part image: MultipartBody.Part
     ): Response<ProductResponse>
 
-    // ✅ NUEVO: Endpoint para actualizar producto
     @Multipart
     @PATCH("product/{id}")
     suspend fun updateProduct(
@@ -33,15 +33,14 @@ interface ApiService {
         @Part("description") description: RequestBody,
         @Part("price") price: RequestBody,
         @Part("stock") stock: RequestBody,
-        @Part image: MultipartBody.Part?  // Opcional - solo si se cambia la imagen
+        @Part("category") category: RequestBody, // ✅ NUEVO
+        @Part image: MultipartBody.Part?
     ): Response<ProductResponse>
 
-    // ✅ NUEVO: Endpoint para eliminar producto
     @DELETE("product/{id}")
     suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
 }
 
-// Modelo principal de respuesta de producto
 data class ProductResponse(
     val id: Int,
 
@@ -52,7 +51,7 @@ data class ProductResponse(
     val description: String,
     val price: Double,
     val stock: Int,
-    val category: String,
+    val category: String, // ✅ NUEVO
 
     @SerializedName("updated_at")
     val updatedAt: Long?,
@@ -64,7 +63,6 @@ data class ProductResponse(
     val image: XanoImage?
 )
 
-// Estructura para manejar el storage de Xano
 data class XanoImage(
     val access: String?,
     val path: String?,
@@ -81,7 +79,6 @@ data class ImageMeta(
     val height: Int?
 )
 
-// Extensión para obtener la URL de forma segura
 fun XanoImage?.getImageUrl(): String {
     return this?.url ?: this?.path ?: ""
 }

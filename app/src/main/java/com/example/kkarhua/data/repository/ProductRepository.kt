@@ -57,7 +57,8 @@ class ProductRepository(private val productDao: ProductDao) {
                                 description = productResponse.description,
                                 price = productResponse.price,
                                 image = imageUrl,
-                                stock = productResponse.stock
+                                stock = productResponse.stock,
+                                category = productResponse.category // ✅ NUEVO
                             )
                         } catch (e: Exception) {
                             null
@@ -100,7 +101,8 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         image = imageUrl,
-                        stock = productResponse.stock
+                        stock = productResponse.stock,
+                        category = productResponse.category // ✅ NUEVO
                     )
 
                     insertProduct(product)
@@ -116,11 +118,13 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
+    // ✅ ACTUALIZADO: Ahora incluye categoría
     suspend fun createProductInApi(
         name: String,
         description: String,
         price: Double,
         stock: Int,
+        category: String,
         imageFile: File
     ): Result<Product> {
         return try {
@@ -132,6 +136,7 @@ class ProductRepository(private val productDao: ProductDao) {
             val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
             val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val stockBody = stock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val requestFile = imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
             val imagePart = MultipartBody.Part.createFormData(
@@ -145,6 +150,7 @@ class ProductRepository(private val productDao: ProductDao) {
                 description = descriptionBody,
                 price = priceBody,
                 stock = stockBody,
+                category = categoryBody,
                 image = imagePart
             )
 
@@ -159,14 +165,14 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         image = imageUrl,
-                        stock = productResponse.stock
+                        stock = productResponse.stock,
+                        category = productResponse.category
                     )
 
                     insertProduct(product)
                     Result.success(product)
                 }
                 else -> {
-                    val errorBody = response.errorBody()?.string() ?: ""
                     Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
                 }
             }
@@ -175,20 +181,22 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
-    // ✅ NUEVO: Actualizar producto en la API
+    // ✅ ACTUALIZADO: Ahora incluye categoría
     suspend fun updateProductInApi(
         productId: Int,
         name: String,
         description: String,
         price: Double,
         stock: Int,
-        imageFile: File?  // Null si no se cambia la imagen
+        category: String,
+        imageFile: File?
     ): Result<Product> {
         return try {
             val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
             val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
             val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val stockBody = stock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val imagePart: MultipartBody.Part? = imageFile?.let {
                 if (it.exists()) {
@@ -205,6 +213,7 @@ class ProductRepository(private val productDao: ProductDao) {
                 description = descriptionBody,
                 price = priceBody,
                 stock = stockBody,
+                category = categoryBody,
                 image = imagePart
             )
 
@@ -219,7 +228,8 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         image = imageUrl,
-                        stock = productResponse.stock
+                        stock = productResponse.stock,
+                        category = productResponse.category
                     )
 
                     insertProduct(product)
@@ -234,7 +244,7 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
-    // ✅ NUEVO: Eliminar producto de la API
+    // ✅ ACTUALIZADO: Ahora realmente elimina del API
     suspend fun deleteProductFromApi(productId: Int): Result<Unit> {
         return try {
             val response = apiService.deleteProduct(productId)

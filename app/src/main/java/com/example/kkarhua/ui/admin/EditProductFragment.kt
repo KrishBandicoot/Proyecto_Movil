@@ -1,4 +1,4 @@
-package com.example.kkarhua.ui.products
+package com.example.kkarhua.ui.admin
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -15,9 +15,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.kkarhua.R
 import com.example.kkarhua.data.local.AppDatabase
+import com.example.kkarhua.data.local.Product
 import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.data.repository.ProductRepository
 import kotlinx.coroutines.Dispatchers
@@ -26,24 +28,27 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class AddProductFragment : Fragment() {
+class EditProductFragment : Fragment() {
+
+    private val args: EditProductFragmentArgs by navArgs()
 
     private lateinit var etProductName: EditText
     private lateinit var etProductDescription: EditText
     private lateinit var etProductPrice: EditText
     private lateinit var etProductStock: EditText
-    private lateinit var spinnerCategory: Spinner // ✅ NUEVO: Spinner para categorías
+    private lateinit var spinnerCategory: Spinner
     private lateinit var imgProductPhoto: ImageView
     private lateinit var btnSelectImage: Button
-    private lateinit var btnAddProduct: Button
+    private lateinit var btnUpdateProduct: Button
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var productRepository: ProductRepository
     private lateinit var authRepository: AuthRepository
 
     private var selectedImageUri: Uri? = null
+    private var currentProduct: Product? = null
+    private var hasImageChanged = false
 
-    // ✅ NUEVO: Lista de categorías disponibles
     private val categories = listOf(
         "Accesorios",
         "Joyería",
@@ -60,6 +65,7 @@ class AddProductFragment : Fragment() {
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
+            hasImageChanged = true
             Glide.with(this)
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
@@ -72,7 +78,7 @@ class AddProductFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_add_product, container, false)
+        return inflater.inflate(R.layout.fragment_edit_product, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -83,7 +89,7 @@ class AddProductFragment : Fragment() {
         if (!authRepository.isAdmin()) {
             Toast.makeText(
                 requireContext(),
-                "⚠️ Acceso denegado: Solo administradores pueden agregar productos",
+                "⚠️ Acceso denegado: Solo administradores",
                 Toast.LENGTH_LONG
             ).show()
             findNavController().navigateUp()
@@ -92,8 +98,9 @@ class AddProductFragment : Fragment() {
 
         setupViews(view)
         setupRepository()
-        setupCategorySpinner() // ✅ NUEVO
+        setupCategorySpinner()
         setupListeners()
+        loadProductData()
     }
 
     private fun setupViews(view: View) {
@@ -101,10 +108,10 @@ class AddProductFragment : Fragment() {
         etProductDescription = view.findViewById(R.id.etProductDescription)
         etProductPrice = view.findViewById(R.id.etProductPrice)
         etProductStock = view.findViewById(R.id.etProductStock)
-        spinnerCategory = view.findViewById(R.id.spinnerCategory) // ✅ NUEVO
+        spinnerCategory = view.findViewById(R.id.spinnerCategory)
         imgProductPhoto = view.findViewById(R.id.imgProductPhoto)
         btnSelectImage = view.findViewById(R.id.btnSelectImage)
-        btnAddProduct = view.findViewById(R.id.btnAddProduct)
+        btnUpdateProduct = view.findViewById(R.id.btnUpdateProduct)
         btnCancel = view.findViewById(R.id.btnCancel)
         progressBar = view.findViewById(R.id.progressBar)
     }
@@ -114,7 +121,6 @@ class AddProductFragment : Fragment() {
         productRepository = ProductRepository(database.productDao())
     }
 
-    // ✅ NUEVO: Configurar el Spinner de categorías
     private fun setupCategorySpinner() {
         val adapter = ArrayAdapter(
             requireContext(),
@@ -129,8 +135,8 @@ class AddProductFragment : Fragment() {
             getImage.launch("image/*")
         }
 
-        btnAddProduct.setOnClickListener {
-            attemptAddProduct()
+        btnUpdateProduct.setOnClickListener {
+            attemptUpdateProduct()
         }
 
         btnCancel.setOnClickListener {
@@ -138,12 +144,68 @@ class AddProductFragment : Fragment() {
         }
     }
 
-    private fun attemptAddProduct() {
+    private fun loadProductData() {
+        progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                val product = productRepository.getProductById(args.productId)
+
+                if (product != null) {
+                    currentProduct = product
+                    displayProductData(product)
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Error: Producto no encontrado",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        findNavController().navigateUp()
+                    }
+                }
+
+                progressBar.visibility = View.GONE
+
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Error al cargar producto: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    progressBar.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    private fun displayProductData(product: Product) {
+        etProductName.setText(product.name)
+        etProductDescription.setText(product.description)
+        etProductPrice.setText(product.price.toString())
+        etProductStock.setText(product.stock.toString())
+
+        // Seleccionar categoría en el spinner
+        val categoryPosition = categories.indexOf(product.category)
+        if (categoryPosition >= 0) {
+            spinnerCategory.setSelection(categoryPosition)
+        }
+
+        // Cargar imagen actual
+        Glide.with(this)
+            .load(product.image)
+            .placeholder(R.drawable.ic_launcher_background)
+            .error(R.drawable.ic_launcher_background)
+            .into(imgProductPhoto)
+    }
+
+    private fun attemptUpdateProduct() {
         val name = etProductName.text.toString().trim()
         val description = etProductDescription.text.toString().trim()
         val priceStr = etProductPrice.text.toString().trim()
         val stockStr = etProductStock.text.toString().trim()
-        val category = spinnerCategory.selectedItem.toString() // ✅ NUEVO
+        val category = spinnerCategory.selectedItem.toString()
 
         when {
             name.isEmpty() -> {
@@ -176,14 +238,6 @@ class AddProductFragment : Fragment() {
                 etProductStock.requestFocus()
                 return
             }
-            selectedImageUri == null -> {
-                Toast.makeText(
-                    requireContext(),
-                    "Debes seleccionar una imagen",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
         }
 
         try {
@@ -202,7 +256,7 @@ class AddProductFragment : Fragment() {
                 return
             }
 
-            uploadProductToXano(name, description, price, stock, category) // ✅ ACTUALIZADO
+            updateProductInXano(name, description, price, stock, category)
 
         } catch (e: NumberFormatException) {
             Toast.makeText(
@@ -213,28 +267,26 @@ class AddProductFragment : Fragment() {
         }
     }
 
-    private fun uploadProductToXano(
+    private fun updateProductInXano(
         name: String,
         description: String,
         price: Double,
         stock: Int,
-        category: String // ✅ NUEVO
+        category: String
     ) {
         progressBar.visibility = View.VISIBLE
-        btnAddProduct.isEnabled = false
-        btnAddProduct.text = "Subiendo..."
+        btnUpdateProduct.isEnabled = false
+        btnUpdateProduct.text = "Actualizando..."
 
         lifecycleScope.launch {
             try {
-                val imageFile = withContext(Dispatchers.IO) {
-                    createImageFile(requireContext(), selectedImageUri!!)
-                }
+                val productId = currentProduct?.id?.toIntOrNull()
 
-                if (imageFile == null) {
+                if (productId == null) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             requireContext(),
-                            "Error al procesar la imagen",
+                            "Error: ID de producto inválido",
                             Toast.LENGTH_SHORT
                         ).show()
                         resetButton()
@@ -242,24 +294,37 @@ class AddProductFragment : Fragment() {
                     return@launch
                 }
 
-                val result = productRepository.createProductInApi(
+                // Si cambió la imagen, procesarla
+                val imageFile = if (hasImageChanged && selectedImageUri != null) {
+                    withContext(Dispatchers.IO) {
+                        createImageFile(requireContext(), selectedImageUri!!)
+                    }
+                } else {
+                    null
+                }
+
+                val result = productRepository.updateProductInApi(
+                    productId = productId,
                     name = name,
                     description = description,
                     price = price,
                     stock = stock,
-                    category = category, // ✅ NUEVO
+                    category = category,
                     imageFile = imageFile
                 )
 
-                withContext(Dispatchers.IO) {
-                    imageFile.delete()
+                // Limpiar archivo temporal si existe
+                imageFile?.let {
+                    withContext(Dispatchers.IO) {
+                        it.delete()
+                    }
                 }
 
                 withContext(Dispatchers.Main) {
                     result.onSuccess {
                         Toast.makeText(
                             requireContext(),
-                            "✓ Producto creado exitosamente",
+                            "✓ Producto actualizado exitosamente",
                             Toast.LENGTH_LONG
                         ).show()
                         findNavController().navigateUp()
@@ -288,8 +353,8 @@ class AddProductFragment : Fragment() {
 
     private fun resetButton() {
         progressBar.visibility = View.GONE
-        btnAddProduct.isEnabled = true
-        btnAddProduct.text = "Agregar Producto"
+        btnUpdateProduct.isEnabled = true
+        btnUpdateProduct.text = "Actualizar Producto"
     }
 
     private fun createImageFile(context: Context, imageUri: Uri): File? {
@@ -304,7 +369,7 @@ class AddProductFragment : Fragment() {
 
             val resizedBitmap = resizeBitmap(bitmap, 1024, 1024)
 
-            val tempFile = File(context.cacheDir, "temp_product_${System.currentTimeMillis()}.jpg")
+            val tempFile = File(context.cacheDir, "temp_product_edit_${System.currentTimeMillis()}.jpg")
             val fos = FileOutputStream(tempFile)
 
             resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos)

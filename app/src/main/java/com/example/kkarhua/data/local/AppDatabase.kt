@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Product::class, CartItem::class],
-    version = 3, // Incrementamos la versión a 3
+    version = 4, // ✅ Incrementamos a versión 4
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,18 +20,14 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // Migración de versión 1 a 2 para agregar el campo stock
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Agregar columna stock a la tabla products
                 database.execSQL("ALTER TABLE products ADD COLUMN stock INTEGER NOT NULL DEFAULT 0")
             }
         }
 
-        // Migración de versión 2 a 3 para renombrar imageUrl a image
         private val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Crear tabla temporal con la nueva estructura
                 database.execSQL("""
                     CREATE TABLE products_new (
                         id TEXT PRIMARY KEY NOT NULL,
@@ -43,20 +39,15 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                 """.trimIndent())
 
-                // Copiar datos de la tabla antigua a la nueva
                 database.execSQL("""
                     INSERT INTO products_new (id, name, description, price, image, stock)
                     SELECT id, name, description, price, imageUrl, stock
                     FROM products
                 """.trimIndent())
 
-                // Eliminar tabla antigua
                 database.execSQL("DROP TABLE products")
-
-                // Renombrar tabla nueva
                 database.execSQL("ALTER TABLE products_new RENAME TO products")
 
-                // Hacer lo mismo con cart_items
                 database.execSQL("""
                     CREATE TABLE cart_items_new (
                         productId TEXT PRIMARY KEY NOT NULL,
@@ -78,6 +69,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // ✅ NUEVA MIGRACIÓN: Agregar columna category
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -85,7 +83,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "kkanhua.db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                 INSTANCE = instance
                 instance

@@ -77,8 +77,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.splashFragment,
                 R.id.loginFragment,
                 R.id.registerFragment,
-                R.id.adminPanelFragment,  // ✅ Ocultar en panel admin
-                R.id.addProductFragment   // ✅ Ocultar al agregar producto
+                R.id.adminPanelFragment,     // ✅ Ocultar en panel admin
+                R.id.addProductFragment,     // ✅ Ocultar al agregar producto
+                R.id.manageProductsFragment, // ✅ Ocultar en gestionar productos
+                R.id.editProductFragment     // ✅ NUEVO: Ocultar al editar producto
             )
 
             if (destination.id in hideBottomNavFragments) {

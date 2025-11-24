@@ -10,6 +10,7 @@ data class Product(
     val name: String,
     val description: String,
     val price: Double,
-    val image: String,  // ✅ CORREGIDO: String para almacenar la URL de Xano
-    val stock: Int = 0
+    val image: String,
+    val stock: Int = 0,
+    val category: String = "" // ✅ NUEVO: Categoría del producto
 )

@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="@color/white">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -14,7 +15,7 @@
             android:id="@+id/titleText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Agregar Nuevo Producto"
+            android:text="✏️ Editar Producto"
             android:textSize="28sp"
             android:textStyle="bold"
             android:textColor="@color/purple_700"
@@ -41,7 +42,7 @@
             android:id="@+id/btnSelectImage"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="📷 Seleccionar Imagen"
+            android:text="📷 Cambiar Imagen"
             android:textSize="14sp"
             android:padding="12dp"
             android:backgroundTint="@color/purple_500"
@@ -132,7 +133,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ✅ NUEVO: Spinner para categorías -->
         <TextView
             android:id="@+id/txtCategoryLabel"
             android:layout_width="0dp"
@@ -188,12 +188,12 @@
                 android:backgroundTint="@android:color/darker_gray" />
 
             <Button
-                android:id="@+id/btnAddProduct"
+                android:id="@+id/btnUpdateProduct"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginStart="8dp"
-                android:text="Agregar Producto"
+                android:text="Actualizar Producto"
                 android:textSize="14sp"
                 android:padding="12dp"
                 android:backgroundTint="@color/purple_700" />

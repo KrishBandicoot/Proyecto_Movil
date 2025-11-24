@@ -89,6 +89,7 @@ class ProductDetailFragment : Fragment() {
         txtProductName.text = product.name
         txtProductPrice.text = "$${String.format("%.0f", product.price)}"
         txtProductDescription.text = product.description
+        txtProductCategory.text = product.category // ✅ ACTUALIZADO: Mostrar categoría
 
         Glide.with(requireContext())
             .load(product.image)
