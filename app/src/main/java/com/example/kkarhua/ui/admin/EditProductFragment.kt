@@ -54,11 +54,8 @@ class EditProductFragment : Fragment() {
     private var selectedImageUri2: Uri? = null
     private var selectedImageUri3: Uri? = null
     private var currentProduct: Product? = null
-    private var hasImageChanged = false
-    private var hasImage2Changed = false
-    private var hasImage3Changed = false
 
-    // ✅ USAR ENUM DE CATEGORÍAS
+    // ✅ Ya no necesitamos las banderas hasImageChanged
     private val categories = ProductCategory.getAllCategories()
 
     private val getImage = registerForActivityResult(
@@ -66,7 +63,6 @@ class EditProductFragment : Fragment() {
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            hasImageChanged = true
             Glide.with(this)
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
@@ -79,7 +75,6 @@ class EditProductFragment : Fragment() {
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri2 = uri
-            hasImage2Changed = true
             Glide.with(this)
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
@@ -92,7 +87,6 @@ class EditProductFragment : Fragment() {
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri3 = uri
-            hasImage3Changed = true
             Glide.with(this)
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
@@ -225,7 +219,6 @@ class EditProductFragment : Fragment() {
         etProductPrice.setText(product.price.toString())
         etProductStock.setText(product.stock.toString())
 
-        // ✅ Seleccionar categoría correctamente
         val categoryPosition = categories.indexOf(product.category)
         if (categoryPosition >= 0) {
             spinnerCategory.setSelection(categoryPosition)
@@ -324,8 +317,7 @@ class EditProductFragment : Fragment() {
         }
     }
 
-    // ✅ SOLUCIÓN: Cambiar la función updateProductInXano en EditProductFragment.kt
-
+    // ✅ SOLUCIÓN COMPLETA: Función updateProductInXano corregida
     private fun updateProductInXano(
         name: String,
         description: String,
@@ -353,24 +345,19 @@ class EditProductFragment : Fragment() {
                     return@launch
                 }
 
-                // ✅ FIX: Usar timestamp único para todos los archivos
                 val timestamp = System.currentTimeMillis()
 
-                // ✅ LOG: Estado inicial
                 android.util.Log.d("EditProduct", "════════════════════════════════")
                 android.util.Log.d("EditProduct", "UPDATE PRODUCT - PREPARACIÓN")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
                 android.util.Log.d("EditProduct", "Product ID: $productId")
-                android.util.Log.d("EditProduct", "hasImageChanged: $hasImageChanged")
-                android.util.Log.d("EditProduct", "hasImage2Changed: $hasImage2Changed")
-                android.util.Log.d("EditProduct", "hasImage3Changed: $hasImage3Changed")
                 android.util.Log.d("EditProduct", "selectedImageUri: ${selectedImageUri != null}")
                 android.util.Log.d("EditProduct", "selectedImageUri2: ${selectedImageUri2 != null}")
                 android.util.Log.d("EditProduct", "selectedImageUri3: ${selectedImageUri3 != null}")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
 
-                // ✅ FIX: Crear archivos con nombres únicos
-                val imageFile = if (hasImageChanged && selectedImageUri != null) {
+                // ✅ FIX: Solo crear archivo si el usuario seleccionó una nueva imagen
+                val imageFile = if (selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
                         try {
                             createImageFileWithName(requireContext(), selectedImageUri!!, "edit_image1_$timestamp")
@@ -381,7 +368,7 @@ class EditProductFragment : Fragment() {
                     }
                 } else null
 
-                val imageFile2 = if (hasImage2Changed && selectedImageUri2 != null) {
+                val imageFile2 = if (selectedImageUri2 != null) {
                     withContext(Dispatchers.IO) {
                         try {
                             createImageFileWithName(requireContext(), selectedImageUri2!!, "edit_image2_$timestamp")
@@ -392,7 +379,7 @@ class EditProductFragment : Fragment() {
                     }
                 } else null
 
-                val imageFile3 = if (hasImage3Changed && selectedImageUri3 != null) {
+                val imageFile3 = if (selectedImageUri3 != null) {
                     withContext(Dispatchers.IO) {
                         try {
                             createImageFileWithName(requireContext(), selectedImageUri3!!, "edit_image3_$timestamp")
@@ -403,7 +390,6 @@ class EditProductFragment : Fragment() {
                     }
                 } else null
 
-                // ✅ LOG: Verificar archivos creados
                 android.util.Log.d("EditProduct", "════════════════════════════════")
                 android.util.Log.d("EditProduct", "ARCHIVOS CREADOS")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
@@ -424,7 +410,7 @@ class EditProductFragment : Fragment() {
                     imageFile3 = imageFile3
                 )
 
-                // ✅ Limpiar archivos temporales
+                // Limpiar archivos temporales
                 withContext(Dispatchers.IO) {
                     try {
                         imageFile?.delete()
@@ -467,7 +453,6 @@ class EditProductFragment : Fragment() {
         }
     }
 
-    // ✅ NUEVA FUNCIÓN: Crear archivo con nombre específico
     private fun createImageFileWithName(context: Context, imageUri: Uri, fileName: String): File? {
         return try {
             val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -480,7 +465,6 @@ class EditProductFragment : Fragment() {
 
             val resizedBitmap = resizeBitmap(bitmap, 1024, 1024)
 
-            // ✅ FIX: Usar el nombre específico proporcionado
             val tempFile = File(context.cacheDir, "$fileName.jpg")
             val fos = FileOutputStream(tempFile)
 
@@ -497,38 +481,10 @@ class EditProductFragment : Fragment() {
         }
     }
 
-// La función createImageFile original ya no se usa
-
     private fun resetButton() {
         progressBar.visibility = View.GONE
         btnUpdateProduct.isEnabled = true
         btnUpdateProduct.text = "Actualizar Producto"
-    }
-
-    private fun createImageFile(context: Context, imageUri: Uri): File? {
-        return try {
-            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                val source = ImageDecoder.createSource(context.contentResolver, imageUri)
-                ImageDecoder.decodeBitmap(source)
-            } else {
-                @Suppress("DEPRECATION")
-                MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
-            }
-
-            val resizedBitmap = resizeBitmap(bitmap, 1024, 1024)
-
-            val tempFile = File(context.cacheDir, "temp_product_edit_${System.currentTimeMillis()}.jpg")
-            val fos = FileOutputStream(tempFile)
-
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos)
-            fos.flush()
-            fos.close()
-
-            tempFile
-
-        } catch (e: Exception) {
-            null
-        }
     }
 
     private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
