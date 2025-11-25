@@ -22,10 +22,11 @@ interface ApiService {
         @Part("price") price: RequestBody,
         @Part("stock") stock: RequestBody,
         @Part("category") category: RequestBody,
-        @Part image: MultipartBody.Part
+        @Part image: MultipartBody.Part,
+        @Part image2: MultipartBody.Part?, // ✅ NUEVO: Imagen 2 (opcional)
+        @Part image3: MultipartBody.Part?  // ✅ NUEVO: Imagen 3 (opcional)
     ): Response<ProductResponse>
 
-    // ✅ SOLUCIÓN: Actualizar producto con data class
     @PATCH("product/{id}")
     @Headers("Content-Type: application/json")
     suspend fun updateProduct(
@@ -44,7 +45,9 @@ data class UpdateProductData(
     val price: Double,
     val stock: Int,
     val category: String,
-    val image: ImageUpdateData? = null
+    val image: ImageUpdateData? = null,
+    val image2: ImageUpdateData? = null, // ✅ NUEVO
+    val image3: ImageUpdateData? = null  // ✅ NUEVO
 )
 
 data class ImageUpdateData(
@@ -81,7 +84,13 @@ data class ProductResponse(
     val isDeleted: Boolean?,
 
     @SerializedName("image")
-    val image: XanoImage?
+    val image: XanoImage?,
+
+    @SerializedName("image2") // ✅ NUEVO
+    val image2: XanoImage?,
+
+    @SerializedName("image3") // ✅ NUEVO
+    val image3: XanoImage?
 )
 
 data class XanoImage(

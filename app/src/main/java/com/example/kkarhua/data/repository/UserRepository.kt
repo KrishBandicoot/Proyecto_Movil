@@ -19,9 +19,6 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "========================================")
             Log.d(TAG, "GET ALL USERS")
             Log.d(TAG, "========================================")
-            Log.d(TAG, "Token: ${token.take(20)}...")
-            Log.d(TAG, "Endpoint: ${RetrofitClient.userService}")
-            Log.d(TAG, "========================================")
 
             val response = userService.getAllUsers("Bearer $token")
 
@@ -32,7 +29,7 @@ class UserRepository(private val authRepository: AuthRepository) {
                 if (users != null) {
                     Log.d(TAG, "✓ Usuarios obtenidos: ${users.size}")
                     users.forEach { user ->
-                        Log.d(TAG, "  - ${user.name} (${user.email}) [${user.role}]")
+                        Log.d(TAG, "  - ${user.name} (${user.email}) [${user.role}] - ${user.state}")
                     }
                     Log.d(TAG, "========================================")
                     Result.success(users)
@@ -71,7 +68,7 @@ class UserRepository(private val authRepository: AuthRepository) {
             if (response.isSuccessful) {
                 val user = response.body()
                 if (user != null) {
-                    Log.d(TAG, "✓ Usuario obtenido: ${user.name}")
+                    Log.d(TAG, "✓ Usuario obtenido: ${user.name} - State: ${user.state}")
                     Result.success(user)
                 } else {
                     Log.e(TAG, "✗ Usuario no encontrado")
@@ -88,11 +85,13 @@ class UserRepository(private val authRepository: AuthRepository) {
         }
     }
 
+    // ✅ ACTUALIZADO: Incluye state
     suspend fun updateUser(
         userId: Int,
         name: String,
         email: String,
         role: String,
+        state: String, // ✅ NUEVO
         password: String? = null
     ): Result<UserResponse> {
         return try {
@@ -108,11 +107,9 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "Name: $name")
             Log.d(TAG, "Email: $email")
             Log.d(TAG, "Role: $role")
+            Log.d(TAG, "State: $state") // ✅ NUEVO
             Log.d(TAG, "Password: ${if (password != null) "Nueva contraseña" else "Sin cambios"}")
-            Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
-
-            Log.d(TAG, "Update data: name=$name, email=$email, role=$role, password=${if (password != null) "***" else "null"}")
 
             val response = if (password != null && password.isNotEmpty()) {
                 Log.d(TAG, "→ Actualizando CON nueva contraseña")
@@ -120,6 +117,7 @@ class UserRepository(private val authRepository: AuthRepository) {
                     name = name,
                     email = email,
                     role = role,
+                    state = state, // ✅ NUEVO
                     password = password
                 )
                 userService.updateUserWithPassword("Bearer $token", userId, updateData)
@@ -128,7 +126,8 @@ class UserRepository(private val authRepository: AuthRepository) {
                 val updateData = com.example.kkarhua.data.remote.UpdateUserDataWithoutPassword(
                     name = name,
                     email = email,
-                    role = role
+                    role = role,
+                    state = state // ✅ NUEVO
                 )
                 userService.updateUserWithoutPassword("Bearer $token", userId, updateData)
             }
@@ -145,6 +144,7 @@ class UserRepository(private val authRepository: AuthRepository) {
                     Log.d(TAG, "✓ Usuario actualizado: ${user.name}")
                     Log.d(TAG, "  Email: ${user.email}")
                     Log.d(TAG, "  Role: ${user.role}")
+                    Log.d(TAG, "  State: ${user.state}") // ✅ NUEVO
                     Log.d(TAG, "========================================")
                     Result.success(user)
                 } else {
@@ -177,13 +177,11 @@ class UserRepository(private val authRepository: AuthRepository) {
             Log.d(TAG, "DELETE USER")
             Log.d(TAG, "========================================")
             Log.d(TAG, "User ID: $userId")
-            Log.d(TAG, "Token: ${token.take(20)}...")
             Log.d(TAG, "========================================")
 
             val response = userService.deleteUser("Bearer $token", userId)
 
             Log.d(TAG, "Response code: ${response.code()}")
-            Log.d(TAG, "Response message: ${response.message()}")
 
             if (response.isSuccessful) {
                 Log.d(TAG, "✓ Usuario eliminado exitosamente")

@@ -18,11 +18,12 @@ class AuthRepository(context: Context) {
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_USER_STATE = "user_state" // ✅ NUEVO
     }
 
     suspend fun signup(name: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val request = SignupRequest(name, email, password)
+            val request = SignupRequest(name, email, password) // Ya incluye state = "activo"
             val response = authService.signup(request)
 
             if (response.isSuccessful) {
@@ -42,8 +43,6 @@ class AuthRepository(context: Context) {
         }
     }
 
-    // ✅ NUEVO: Agregar este método a AuthRepository.kt (después del método signup existente)
-
     suspend fun adminSignup(name: String, email: String, password: String, role: String): Result<AuthResponse> {
         return try {
             val token = getAuthToken()
@@ -51,7 +50,7 @@ class AuthRepository(context: Context) {
                 return Result.failure(Exception("No hay sesión de administrador activa"))
             }
 
-            val request = AdminSignupRequest(name, email, password, role)
+            val request = AdminSignupRequest(name, email, password, role) // Ya incluye state = "activo"
             val response = authService.adminSignup("Bearer $token", request)
 
             if (response.isSuccessful) {
@@ -61,6 +60,7 @@ class AuthRepository(context: Context) {
                     Log.d(TAG, "  - Name: ${authResponse.user?.name}")
                     Log.d(TAG, "  - Email: ${authResponse.user?.email}")
                     Log.d(TAG, "  - Role: ${authResponse.user?.role}")
+                    Log.d(TAG, "  - State: ${authResponse.user?.state}")
                     Result.success(authResponse)
                 } else {
                     Result.failure(Exception("Response body es null"))
@@ -104,6 +104,15 @@ class AuthRepository(context: Context) {
                             Log.d(TAG, "  - Name: ${meResponse?.name}")
                             Log.d(TAG, "  - Email: ${meResponse?.email}")
                             Log.d(TAG, "  - Role: ${meResponse?.role}")
+                            Log.d(TAG, "  - State: ${meResponse?.state}")
+
+                            // ✅ NUEVO: Verificar si el usuario está bloqueado
+                            val userState = meResponse?.state ?: "activo"
+                            if (userState == "bloqueado") {
+                                Log.e(TAG, "✗ Usuario bloqueado")
+                                logout() // Limpiar sesión
+                                return Result.failure(Exception("Tu cuenta ha sido bloqueada. Contacta al administrador."))
+                            }
 
                             // Crear AuthResponse completo con los datos de /auth/me
                             val completeAuthResponse = AuthResponse(
@@ -113,6 +122,7 @@ class AuthRepository(context: Context) {
                                     name = meResponse?.name ?: "",
                                     email = meResponse?.email ?: "",
                                     role = meResponse?.role ?: "member",
+                                    state = userState, // ✅ NUEVO
                                     created_at = meResponse?.created_at
                                 )
                             )
@@ -161,13 +171,15 @@ class AuthRepository(context: Context) {
                     Log.d(TAG, "  - Name: ${meResponse.name}")
                     Log.d(TAG, "  - Email: ${meResponse.email}")
                     Log.d(TAG, "  - Role: ${meResponse.role}")
+                    Log.d(TAG, "  - State: ${meResponse.state}")
 
-                    // Actualizar rol en SharedPreferences
+                    // Actualizar datos en SharedPreferences
                     prefs.edit().apply {
                         putInt(KEY_USER_ID, meResponse.id)
                         putString(KEY_USER_NAME, meResponse.name)
                         putString(KEY_USER_EMAIL, meResponse.email)
                         putString(KEY_USER_ROLE, meResponse.role ?: "member")
+                        putString(KEY_USER_STATE, meResponse.state ?: "activo") // ✅ NUEVO
                         apply()
                     }
 
@@ -191,6 +203,7 @@ class AuthRepository(context: Context) {
         val token = authResponse.getToken() ?: ""
         val user = authResponse.user
         val role = user?.role ?: "member"
+        val state = user?.state ?: "activo" // ✅ NUEVO
 
         Log.d(TAG, "========================================")
         Log.d(TAG, "GUARDANDO DATOS DE USUARIO")
@@ -199,9 +212,8 @@ class AuthRepository(context: Context) {
         Log.d(TAG, "User ID: ${user?.id}")
         Log.d(TAG, "User Name: ${user?.name}")
         Log.d(TAG, "User Email: ${user?.email}")
-        Log.d(TAG, "User Role RAW: '${user?.role}'")
-        Log.d(TAG, "User Role SAVED: '$role'")
-        Log.d(TAG, "Es Admin: ${role == "admin"}")
+        Log.d(TAG, "User Role: '$role'")
+        Log.d(TAG, "User State: '$state'") // ✅ NUEVO
         Log.d(TAG, "========================================")
 
         prefs.edit().apply {
@@ -210,6 +222,7 @@ class AuthRepository(context: Context) {
             putString(KEY_USER_NAME, user?.name ?: "")
             putString(KEY_USER_EMAIL, user?.email ?: "")
             putString(KEY_USER_ROLE, role)
+            putString(KEY_USER_STATE, state) // ✅ NUEVO
             apply()
         }
     }
@@ -234,16 +247,18 @@ class AuthRepository(context: Context) {
         return prefs.getString(KEY_USER_ROLE, "member") ?: "member"
     }
 
+    // ✅ NUEVO: Obtener estado del usuario
+    fun getUserState(): String {
+        return prefs.getString(KEY_USER_STATE, "activo") ?: "activo"
+    }
+
+    // ✅ NUEVO: Verificar si está bloqueado
+    fun isBlocked(): Boolean {
+        return getUserState() == "bloqueado"
+    }
+
     fun isAdmin(): Boolean {
         val role = getUserRole()
-        Log.d(TAG, "========================================")
-        Log.d(TAG, "VERIFICANDO SI ES ADMIN")
-        Log.d(TAG, "========================================")
-        Log.d(TAG, "Rol obtenido: '$role'")
-        Log.d(TAG, "Comparando con: 'admin'")
-        Log.d(TAG, "Es admin: ${role == "admin"}")
-        Log.d(TAG, "Longitud del rol: ${role.length} caracteres")
-        Log.d(TAG, "========================================")
         return role == "admin"
     }
 

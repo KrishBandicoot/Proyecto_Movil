@@ -52,6 +52,8 @@ class ProductRepository(private val productDao: ProductDao) {
                     val products = productsResponse.mapNotNull { productResponse ->
                         try {
                             val imageUrl = productResponse.image.getImageUrl()
+                            val imageUrl2 = productResponse.image2.getImageUrl() // ✅ NUEVO
+                            val imageUrl3 = productResponse.image3.getImageUrl() // ✅ NUEVO
 
                             Product(
                                 id = productResponse.id.toString(),
@@ -59,6 +61,8 @@ class ProductRepository(private val productDao: ProductDao) {
                                 description = productResponse.description,
                                 price = productResponse.price,
                                 image = imageUrl,
+                                image2 = imageUrl2, // ✅ NUEVO
+                                image3 = imageUrl3, // ✅ NUEVO
                                 stock = productResponse.stock,
                                 category = productResponse.category
                             )
@@ -96,6 +100,8 @@ class ProductRepository(private val productDao: ProductDao) {
 
                 if (productResponse != null) {
                     val imageUrl = productResponse.image.getImageUrl()
+                    val imageUrl2 = productResponse.image2.getImageUrl() // ✅ NUEVO
+                    val imageUrl3 = productResponse.image3.getImageUrl() // ✅ NUEVO
 
                     val product = Product(
                         id = productResponse.id.toString(),
@@ -103,6 +109,8 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         image = imageUrl,
+                        image2 = imageUrl2, // ✅ NUEVO
+                        image3 = imageUrl3, // ✅ NUEVO
                         stock = productResponse.stock,
                         category = productResponse.category
                     )
@@ -120,13 +128,16 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
+    // ✅ ACTUALIZADO: Ahora acepta imageFile2 e imageFile3
     suspend fun createProductInApi(
         name: String,
         description: String,
         price: Double,
         stock: Int,
         category: String,
-        imageFile: File
+        imageFile: File,
+        imageFile2: File? = null, // ✅ NUEVO
+        imageFile3: File? = null  // ✅ NUEVO
     ): Result<Product> {
         return try {
             if (!imageFile.exists()) {
@@ -146,19 +157,39 @@ class ProductRepository(private val productDao: ProductDao) {
                 requestFile
             )
 
+            // ✅ NUEVO: Preparar imagen2 si existe
+            val imagePart2 = imageFile2?.let { file ->
+                if (file.exists()) {
+                    val requestFile2 = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("image2", file.name, requestFile2)
+                } else null
+            }
+
+            // ✅ NUEVO: Preparar imagen3 si existe
+            val imagePart3 = imageFile3?.let { file ->
+                if (file.exists()) {
+                    val requestFile3 = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("image3", file.name, requestFile3)
+                } else null
+            }
+
             val response = apiService.createProduct(
                 name = nameBody,
                 description = descriptionBody,
                 price = priceBody,
                 stock = stockBody,
                 category = categoryBody,
-                image = imagePart
+                image = imagePart,
+                image2 = imagePart2, // ✅ NUEVO
+                image3 = imagePart3  // ✅ NUEVO
             )
 
             when {
                 response.isSuccessful && response.body() != null -> {
                     val productResponse = response.body()!!
                     val imageUrl = productResponse.image.getImageUrl()
+                    val imageUrl2 = productResponse.image2.getImageUrl() // ✅ NUEVO
+                    val imageUrl3 = productResponse.image3.getImageUrl() // ✅ NUEVO
 
                     val product = Product(
                         id = productResponse.id.toString(),
@@ -166,6 +197,8 @@ class ProductRepository(private val productDao: ProductDao) {
                         description = productResponse.description,
                         price = productResponse.price,
                         image = imageUrl,
+                        image2 = imageUrl2, // ✅ NUEVO
+                        image3 = imageUrl3, // ✅ NUEVO
                         stock = productResponse.stock,
                         category = productResponse.category
                     )
@@ -182,8 +215,7 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
-
-
+    // ✅ ACTUALIZADO: Ahora acepta imageFile2 e imageFile3
     suspend fun updateProductInApi(
         productId: Int,
         name: String,
@@ -191,39 +223,39 @@ class ProductRepository(private val productDao: ProductDao) {
         price: Double,
         stock: Int,
         category: String,
-        imageFile: File?
+        imageFile: File?,
+        imageFile2: File? = null, // ✅ NUEVO
+        imageFile3: File? = null   // ✅ NUEVO
     ): Result<Product> {
         return try {
             Log.d(TAG, "════════════════════════════════════════")
             Log.d(TAG, "UPDATE PRODUCT - INICIO")
             Log.d(TAG, "════════════════════════════════════════")
             Log.d(TAG, "Product ID: $productId")
-            Log.d(TAG, "Name: $name")
-            Log.d(TAG, "Has image to upload: ${imageFile != null && imageFile.exists()}")
-            Log.d(TAG, "════════════════════════════════════════")
+            Log.d(TAG, "Has image1: ${imageFile != null && imageFile.exists()}")
+            Log.d(TAG, "Has image2: ${imageFile2 != null && imageFile2.exists()}")
+            Log.d(TAG, "Has image3: ${imageFile3 != null && imageFile3.exists()}")
 
-            // Si hay imagen nueva, primero crear un producto temporal para obtener la URL de Xano
-            val imageData: com.example.kkarhua.data.remote.ImageUpdateData? = if (imageFile != null && imageFile.exists()) {
-                Log.d(TAG, "→ Subiendo imagen nueva a Xano...")
-
-                // Crear producto temporal para subir la imagen
+            // ✅ Función auxiliar para subir imagen temporal
+            suspend fun uploadTempImage(file: File): com.example.kkarhua.data.remote.ImageUpdateData? {
                 val tempNameBody = "TEMP_${System.currentTimeMillis()}".toRequestBody("text/plain".toMediaTypeOrNull())
                 val tempDescBody = "temp".toRequestBody("text/plain".toMediaTypeOrNull())
                 val tempPriceBody = "1".toRequestBody("text/plain".toMediaTypeOrNull())
                 val tempStockBody = "1".toRequestBody("text/plain".toMediaTypeOrNull())
                 val tempCategoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                val requestFile = imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+                val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                val imagePart = MultipartBody.Part.createFormData("image", file.name, requestFile)
 
-                // Crear producto temporal
                 val tempResponse = apiService.createProduct(
                     name = tempNameBody,
                     description = tempDescBody,
                     price = tempPriceBody,
                     stock = tempStockBody,
                     category = tempCategoryBody,
-                    image = imagePart
+                    image = imagePart,
+                    image2 = null,
+                    image3 = null
                 )
 
                 if (tempResponse.isSuccessful && tempResponse.body() != null) {
@@ -231,20 +263,13 @@ class ProductRepository(private val productDao: ProductDao) {
                     val tempId = tempProduct.id
                     val imageObject = tempProduct.image
 
-                    Log.d(TAG, "✓ Imagen subida correctamente")
-                    Log.d(TAG, "  Temp product ID: $tempId")
-                    Log.d(TAG, "  Image data: $imageObject")
-
-                    // Eliminar producto temporal
                     try {
                         apiService.deleteProduct(tempId)
-                        Log.d(TAG, "✓ Producto temporal eliminado")
                     } catch (e: Exception) {
-                        Log.w(TAG, "No se pudo eliminar producto temporal: ${e.message}")
+                        Log.w(TAG, "No se pudo eliminar producto temporal")
                     }
 
-                    // Retornar el objeto image completo
-                    com.example.kkarhua.data.remote.ImageUpdateData(
+                    return com.example.kkarhua.data.remote.ImageUpdateData(
                         path = imageObject?.path ?: "",
                         name = imageObject?.name ?: "",
                         type = imageObject?.type ?: "",
@@ -256,67 +281,50 @@ class ProductRepository(private val productDao: ProductDao) {
                             height = imageObject?.meta?.height ?: 0
                         )
                     )
-                } else {
-                    Log.e(TAG, "✗ Error subiendo imagen: ${tempResponse.code()}")
-                    null
                 }
-            } else {
-                Log.d(TAG, "→ Sin imagen nueva, manteniendo imagen actual")
-                null
+                return null
             }
 
-            // Crear el objeto de datos para actualizar
+            // ✅ Subir imágenes si hay cambios
+            val imageData = if (imageFile != null && imageFile.exists()) {
+                uploadTempImage(imageFile)
+            } else null
+
+            val imageData2 = if (imageFile2 != null && imageFile2.exists()) {
+                uploadTempImage(imageFile2)
+            } else null
+
+            val imageData3 = if (imageFile3 != null && imageFile3.exists()) {
+                uploadTempImage(imageFile3)
+            } else null
+
             val updateData = com.example.kkarhua.data.remote.UpdateProductData(
                 name = name,
                 description = description,
                 price = price,
                 stock = stock,
                 category = category,
-                image = imageData  // null si no hay imagen nueva
+                image = imageData,
+                image2 = imageData2, // ✅ NUEVO
+                image3 = imageData3  // ✅ NUEVO
             )
 
-            if (imageData != null) {
-                Log.d(TAG, "→ Actualizando producto CON imagen nueva")
-            } else {
-                Log.d(TAG, "→ Actualizando producto SIN cambiar imagen")
-            }
-
-            Log.d(TAG, "Datos a enviar: $updateData")
-
-            // Actualizar el producto
             val response = apiService.updateProduct(
                 id = productId,
                 productData = updateData
             )
 
-            Log.d(TAG, "════════════════════════════════════════")
-            Log.d(TAG, "RESPUESTA DE API")
-            Log.d(TAG, "════════════════════════════════════════")
-            Log.d(TAG, "Response code: ${response.code()}")
-            Log.d(TAG, "Response message: ${response.message()}")
-            Log.d(TAG, "Is successful: ${response.isSuccessful}")
-
             if (!response.isSuccessful) {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Error body: $errorBody")
-                Log.d(TAG, "════════════════════════════════════════")
                 return Result.failure(Exception("Error ${response.code()}: $errorBody"))
             }
 
             val productResponse = response.body()
-            if (productResponse == null) {
-                Log.e(TAG, "Response body es null")
-                Log.d(TAG, "════════════════════════════════════════")
-                return Result.failure(Exception("Response body es null"))
-            }
-
-            Log.d(TAG, "✓ Producto actualizado correctamente")
-            Log.d(TAG, "  ID: ${productResponse.id}")
-            Log.d(TAG, "  Name: ${productResponse.name}")
-            Log.d(TAG, "  Image URL: ${productResponse.image.getImageUrl()}")
-            Log.d(TAG, "════════════════════════════════════════")
+                ?: return Result.failure(Exception("Response body es null"))
 
             val imageUrl = productResponse.image.getImageUrl()
+            val imageUrl2 = productResponse.image2.getImageUrl() // ✅ NUEVO
+            val imageUrl3 = productResponse.image3.getImageUrl() // ✅ NUEVO
 
             val product = Product(
                 id = productResponse.id.toString(),
@@ -324,6 +332,8 @@ class ProductRepository(private val productDao: ProductDao) {
                 description = productResponse.description,
                 price = productResponse.price,
                 image = imageUrl,
+                image2 = imageUrl2, // ✅ NUEVO
+                image3 = imageUrl3, // ✅ NUEVO
                 stock = productResponse.stock,
                 category = productResponse.category
             )
@@ -332,9 +342,7 @@ class ProductRepository(private val productDao: ProductDao) {
             Result.success(product)
 
         } catch (e: Exception) {
-            Log.e(TAG, "════════════════════════════════════════")
             Log.e(TAG, "EXCEPCIÓN: ${e.message}", e)
-            Log.e(TAG, "════════════════════════════════════════")
             Result.failure(e)
         }
     }

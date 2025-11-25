@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [Product::class, CartItem::class],
-    version = 4, // ✅ Incrementamos a versión 4
+    version = 5, // ✅ Incrementamos a versión 5
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -69,10 +69,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // ✅ NUEVA MIGRACIÓN: Agregar columna category
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE products ADD COLUMN category TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        // ✅ NUEVA MIGRACIÓN: Agregar image2 e image3
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE products ADD COLUMN image2 TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE products ADD COLUMN image3 TEXT NOT NULL DEFAULT ''")
             }
         }
 
@@ -83,7 +90,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "kkanhua.db"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

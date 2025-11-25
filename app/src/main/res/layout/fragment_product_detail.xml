@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- ✅ IMAGEN PRINCIPAL -->
         <ImageView
             android:id="@+id/imgProduct"
             android:layout_width="0dp"
@@ -21,6 +22,44 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- ✅ NUEVO: GALERÍA DE IMÁGENES ADICIONALES -->
+        <LinearLayout
+            android:id="@+id/layoutImageGallery"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/imgProduct">
+
+            <!-- ✅ IMAGEN 2 -->
+            <ImageView
+                android:id="@+id/imgProduct2"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_weight="1"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background"
+                android:contentDescription="Segunda imagen del producto"
+                android:layout_marginEnd="8dp"
+                android:visibility="gone" />
+
+            <!-- ✅ IMAGEN 3 -->
+            <ImageView
+                android:id="@+id/imgProduct3"
+                android:layout_width="0dp"
+                android:layout_height="120dp"
+                android:layout_weight="1"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background"
+                android:contentDescription="Tercera imagen del producto"
+                android:layout_marginStart="8dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/txtProductName"
             android:layout_width="0dp"
@@ -31,7 +70,7 @@
             android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imgProduct"
+            app:layout_constraintTop_toBottomOf="@+id/layoutImageGallery"
             android:layout_marginTop="16dp" />
 
         <TextView

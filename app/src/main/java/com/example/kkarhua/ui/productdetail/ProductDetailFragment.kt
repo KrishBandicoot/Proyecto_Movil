@@ -29,6 +29,8 @@ class ProductDetailFragment : Fragment() {
     private val args: ProductDetailFragmentArgs by navArgs()
 
     private lateinit var imgProduct: ImageView
+    private lateinit var imgProduct2: ImageView // ✅ NUEVO
+    private lateinit var imgProduct3: ImageView // ✅ NUEVO
     private lateinit var txtProductName: TextView
     private lateinit var txtProductPrice: TextView
     private lateinit var txtProductDescription: TextView
@@ -58,6 +60,8 @@ class ProductDetailFragment : Fragment() {
 
     private fun setupViews(view: View) {
         imgProduct = view.findViewById(R.id.imgProduct)
+        imgProduct2 = view.findViewById(R.id.imgProduct2) // ✅ NUEVO
+        imgProduct3 = view.findViewById(R.id.imgProduct3) // ✅ NUEVO
         txtProductName = view.findViewById(R.id.txtProductName)
         txtProductPrice = view.findViewById(R.id.txtProductPrice)
         txtProductDescription = view.findViewById(R.id.txtProductDescription)
@@ -89,13 +93,38 @@ class ProductDetailFragment : Fragment() {
         txtProductName.text = product.name
         txtProductPrice.text = "$${String.format("%.0f", product.price)}"
         txtProductDescription.text = product.description
-        txtProductCategory.text = product.category // ✅ ACTUALIZADO: Mostrar categoría
+        txtProductCategory.text = product.category
 
+        // ✅ Cargar imagen principal
         Glide.with(requireContext())
             .load(product.image)
             .placeholder(R.drawable.ic_launcher_background)
             .error(R.drawable.ic_launcher_background)
             .into(imgProduct)
+
+        // ✅ NUEVO: Cargar imagen2 si existe
+        if (product.image2.isNotEmpty()) {
+            imgProduct2.visibility = View.VISIBLE
+            Glide.with(requireContext())
+                .load(product.image2)
+                .placeholder(R.drawable.ic_launcher_background)
+                .error(R.drawable.ic_launcher_background)
+                .into(imgProduct2)
+        } else {
+            imgProduct2.visibility = View.GONE
+        }
+
+        // ✅ NUEVO: Cargar imagen3 si existe
+        if (product.image3.isNotEmpty()) {
+            imgProduct3.visibility = View.VISIBLE
+            Glide.with(requireContext())
+                .load(product.image3)
+                .placeholder(R.drawable.ic_launcher_background)
+                .error(R.drawable.ic_launcher_background)
+                .into(imgProduct3)
+        } else {
+            imgProduct3.visibility = View.GONE
+        }
     }
 
     private fun setupListeners() {

@@ -33,6 +33,9 @@ class EditUserFragment : Fragment() {
     private lateinit var radioGroupRole: RadioGroup
     private lateinit var radioMember: RadioButton
     private lateinit var radioAdmin: RadioButton
+    private lateinit var radioGroupState: RadioGroup // ✅ NUEVO
+    private lateinit var radioActivo: RadioButton // ✅ NUEVO
+    private lateinit var radioBloqueado: RadioButton // ✅ NUEVO
     private lateinit var btnUpdate: Button
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
@@ -90,6 +93,9 @@ class EditUserFragment : Fragment() {
         radioGroupRole = view.findViewById(R.id.radioGroupRole)
         radioMember = view.findViewById(R.id.radioMember)
         radioAdmin = view.findViewById(R.id.radioAdmin)
+        radioGroupState = view.findViewById(R.id.radioGroupState) // ✅ NUEVO
+        radioActivo = view.findViewById(R.id.radioActivo) // ✅ NUEVO
+        radioBloqueado = view.findViewById(R.id.radioBloqueado) // ✅ NUEVO
         btnUpdate = view.findViewById(R.id.btnUpdate)
         btnCancel = view.findViewById(R.id.btnCancel)
         progressBar = view.findViewById(R.id.progressBar)
@@ -110,7 +116,6 @@ class EditUserFragment : Fragment() {
             tilEmail.error = if (result.isValid) null else result.message
         }
 
-        // ✅ VALIDACIÓN OPCIONAL: Solo valida si hay texto
         etPassword.addTextChangedListener {
             val password = it.toString()
             val result = ValidationUtils.validatePasswordOptional(password)
@@ -142,6 +147,7 @@ class EditUserFragment : Fragment() {
                     Log.d(TAG, "  Name: ${user.name}")
                     Log.d(TAG, "  Email: ${user.email}")
                     Log.d(TAG, "  Role: ${user.role}")
+                    Log.d(TAG, "  State: ${user.state}") // ✅ NUEVO
 
                     currentUser = user
                     displayUserData(user)
@@ -171,12 +177,17 @@ class EditUserFragment : Fragment() {
     private fun displayUserData(user: UserResponse) {
         etName.setText(user.name)
         etEmail.setText(user.email)
-        // ✅ Campo de contraseña vacío por defecto
 
         // Seleccionar rol
         when (user.role) {
             "admin" -> radioAdmin.isChecked = true
             else -> radioMember.isChecked = true
+        }
+
+        // ✅ NUEVO: Seleccionar estado
+        when (user.state) {
+            "bloqueado" -> radioBloqueado.isChecked = true
+            else -> radioActivo.isChecked = true
         }
     }
 
@@ -188,6 +199,11 @@ class EditUserFragment : Fragment() {
             R.id.radioAdmin -> "admin"
             else -> "member"
         }
+        // ✅ NUEVO: Obtener estado
+        val state = when (radioGroupState.checkedRadioButtonId) {
+            R.id.radioBloqueado -> "bloqueado"
+            else -> "activo"
+        }
 
         Log.d(TAG, "========================================")
         Log.d(TAG, "ATTEMPT UPDATE USER")
@@ -195,10 +211,10 @@ class EditUserFragment : Fragment() {
         Log.d(TAG, "Name: $name")
         Log.d(TAG, "Email: $email")
         Log.d(TAG, "Role: $role")
-        Log.d(TAG, "Password: ${if (password.isEmpty()) "No cambiar" else "Cambiar (${password.length} caracteres)"}")
+        Log.d(TAG, "State: $state") // ✅ NUEVO
+        Log.d(TAG, "Password: ${if (password.isEmpty()) "No cambiar" else "Cambiar"}")
         Log.d(TAG, "========================================")
 
-        // ✅ VALIDACIÓN INDIVIDUAL: Solo valida los campos que se van a cambiar
         val nameValidation = ValidationUtils.validateName(name)
         val emailValidation = ValidationUtils.validateEmail(email)
         val passwordValidation = ValidationUtils.validatePasswordOptional(password)
@@ -215,18 +231,17 @@ class EditUserFragment : Fragment() {
                 return
             }
             !passwordValidation.isValid -> {
-                // ✅ Si hay contraseña pero no es válida
                 tilPassword.error = passwordValidation.message
                 etPassword.requestFocus()
                 return
             }
         }
 
-        // ✅ ACTUALIZACIÓN FLEXIBLE: Solo envía contraseña si se ingresó algo
-        updateUser(name, email, role, password.ifEmpty { null })
+        // ✅ ACTUALIZADO: Incluye state
+        updateUser(name, email, role, state, password.ifEmpty { null })
     }
 
-    private fun updateUser(name: String, email: String, role: String, password: String?) {
+    private fun updateUser(name: String, email: String, role: String, state: String, password: String?) {
         progressBar.visibility = View.VISIBLE
         btnUpdate.isEnabled = false
         btnUpdate.text = "Actualizando..."
@@ -238,14 +253,23 @@ class EditUserFragment : Fragment() {
                     name = name,
                     email = email,
                     role = role,
+                    state = state, // ✅ NUEVO
                     password = password
                 )
 
                 result.onSuccess {
                     Log.d(TAG, "✓ Usuario actualizado exitosamente")
+
+                    // ✅ NUEVO: Mostrar mensaje especial si se bloqueó
+                    val message = if (state == "bloqueado") {
+                        "✓ Usuario actualizado y bloqueado exitosamente"
+                    } else {
+                        "✓ Usuario actualizado exitosamente"
+                    }
+
                     Toast.makeText(
                         requireContext(),
-                        "✓ Usuario actualizado exitosamente",
+                        message,
                         Toast.LENGTH_LONG
                     ).show()
                     findNavController().navigateUp()

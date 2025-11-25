@@ -37,6 +37,7 @@ class UsersAdapter(
         private val txtUserName: TextView = itemView.findViewById(R.id.txtUserName)
         private val txtUserEmail: TextView = itemView.findViewById(R.id.txtUserEmail)
         private val txtUserRole: TextView = itemView.findViewById(R.id.txtUserRole)
+        private val txtUserState: TextView = itemView.findViewById(R.id.txtUserState) // ✅ NUEVO
         private val txtUserDate: TextView = itemView.findViewById(R.id.txtUserDate)
         private val btnEdit: Button = itemView.findViewById(R.id.btnEdit)
         private val btnDelete: Button = itemView.findViewById(R.id.btnDelete)
@@ -50,6 +51,22 @@ class UsersAdapter(
                 "admin" -> "⚙️ Administrador"
                 else -> "👤 Usuario"
             }
+
+            // ✅ NUEVO: Mostrar estado con estilo y color
+            val state = user.state ?: "activo"
+            txtUserState.text = when (state) {
+                "bloqueado" -> "🚫 BLOQUEADO"
+                else -> "✅ Activo"
+            }
+
+            // ✅ Cambiar color según estado
+            txtUserState.setTextColor(
+                if (state == "bloqueado") {
+                    android.graphics.Color.parseColor("#F44336") // Rojo
+                } else {
+                    android.graphics.Color.parseColor("#4CAF50") // Verde
+                }
+            )
 
             // Formatear fecha
             user.created_at?.let { timestamp ->

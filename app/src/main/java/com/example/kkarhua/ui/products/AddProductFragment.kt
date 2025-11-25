@@ -32,9 +32,13 @@ class AddProductFragment : Fragment() {
     private lateinit var etProductDescription: EditText
     private lateinit var etProductPrice: EditText
     private lateinit var etProductStock: EditText
-    private lateinit var spinnerCategory: Spinner // ✅ NUEVO: Spinner para categorías
+    private lateinit var spinnerCategory: Spinner
     private lateinit var imgProductPhoto: ImageView
+    private lateinit var imgProductPhoto2: ImageView // ✅ NUEVO
+    private lateinit var imgProductPhoto3: ImageView // ✅ NUEVO
     private lateinit var btnSelectImage: Button
+    private lateinit var btnSelectImage2: Button // ✅ NUEVO
+    private lateinit var btnSelectImage3: Button // ✅ NUEVO
     private lateinit var btnAddProduct: Button
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
@@ -42,8 +46,9 @@ class AddProductFragment : Fragment() {
     private lateinit var authRepository: AuthRepository
 
     private var selectedImageUri: Uri? = null
+    private var selectedImageUri2: Uri? = null // ✅ NUEVO
+    private var selectedImageUri3: Uri? = null // ✅ NUEVO
 
-    // ✅ NUEVO: Lista de categorías disponibles
     private val categories = listOf(
         "Accesorios",
         "Joyería",
@@ -55,6 +60,7 @@ class AddProductFragment : Fragment() {
         "Otro"
     )
 
+    // ✅ ACTUALIZADO: Ahora manejamos 3 imágenes
     private val getImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -64,6 +70,30 @@ class AddProductFragment : Fragment() {
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
                 .into(imgProductPhoto)
+        }
+    }
+
+    private val getImage2 = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri2 = uri
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto2)
+        }
+    }
+
+    private val getImage3 = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri3 = uri
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto3)
         }
     }
 
@@ -92,7 +122,7 @@ class AddProductFragment : Fragment() {
 
         setupViews(view)
         setupRepository()
-        setupCategorySpinner() // ✅ NUEVO
+        setupCategorySpinner()
         setupListeners()
     }
 
@@ -101,9 +131,13 @@ class AddProductFragment : Fragment() {
         etProductDescription = view.findViewById(R.id.etProductDescription)
         etProductPrice = view.findViewById(R.id.etProductPrice)
         etProductStock = view.findViewById(R.id.etProductStock)
-        spinnerCategory = view.findViewById(R.id.spinnerCategory) // ✅ NUEVO
+        spinnerCategory = view.findViewById(R.id.spinnerCategory)
         imgProductPhoto = view.findViewById(R.id.imgProductPhoto)
+        imgProductPhoto2 = view.findViewById(R.id.imgProductPhoto2) // ✅ NUEVO
+        imgProductPhoto3 = view.findViewById(R.id.imgProductPhoto3) // ✅ NUEVO
         btnSelectImage = view.findViewById(R.id.btnSelectImage)
+        btnSelectImage2 = view.findViewById(R.id.btnSelectImage2) // ✅ NUEVO
+        btnSelectImage3 = view.findViewById(R.id.btnSelectImage3) // ✅ NUEVO
         btnAddProduct = view.findViewById(R.id.btnAddProduct)
         btnCancel = view.findViewById(R.id.btnCancel)
         progressBar = view.findViewById(R.id.progressBar)
@@ -114,7 +148,6 @@ class AddProductFragment : Fragment() {
         productRepository = ProductRepository(database.productDao())
     }
 
-    // ✅ NUEVO: Configurar el Spinner de categorías
     private fun setupCategorySpinner() {
         val adapter = ArrayAdapter(
             requireContext(),
@@ -127,6 +160,15 @@ class AddProductFragment : Fragment() {
     private fun setupListeners() {
         btnSelectImage.setOnClickListener {
             getImage.launch("image/*")
+        }
+
+        // ✅ NUEVO: Botones para imagen 2 y 3
+        btnSelectImage2.setOnClickListener {
+            getImage2.launch("image/*")
+        }
+
+        btnSelectImage3.setOnClickListener {
+            getImage3.launch("image/*")
         }
 
         btnAddProduct.setOnClickListener {
@@ -143,7 +185,7 @@ class AddProductFragment : Fragment() {
         val description = etProductDescription.text.toString().trim()
         val priceStr = etProductPrice.text.toString().trim()
         val stockStr = etProductStock.text.toString().trim()
-        val category = spinnerCategory.selectedItem.toString() // ✅ NUEVO
+        val category = spinnerCategory.selectedItem.toString()
 
         when {
             name.isEmpty() -> {
@@ -179,7 +221,7 @@ class AddProductFragment : Fragment() {
             selectedImageUri == null -> {
                 Toast.makeText(
                     requireContext(),
-                    "Debes seleccionar una imagen",
+                    "Debes seleccionar al menos la imagen principal",
                     Toast.LENGTH_SHORT
                 ).show()
                 return
@@ -202,7 +244,7 @@ class AddProductFragment : Fragment() {
                 return
             }
 
-            uploadProductToXano(name, description, price, stock, category) // ✅ ACTUALIZADO
+            uploadProductToXano(name, description, price, stock, category)
 
         } catch (e: NumberFormatException) {
             Toast.makeText(
@@ -218,7 +260,7 @@ class AddProductFragment : Fragment() {
         description: String,
         price: Double,
         stock: Int,
-        category: String // ✅ NUEVO
+        category: String
     ) {
         progressBar.visibility = View.VISIBLE
         btnAddProduct.isEnabled = false
@@ -226,6 +268,7 @@ class AddProductFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
+                // ✅ Crear archivo para imagen principal
                 val imageFile = withContext(Dispatchers.IO) {
                     createImageFile(requireContext(), selectedImageUri!!)
                 }
@@ -234,7 +277,7 @@ class AddProductFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             requireContext(),
-                            "Error al procesar la imagen",
+                            "Error al procesar la imagen principal",
                             Toast.LENGTH_SHORT
                         ).show()
                         resetButton()
@@ -242,17 +285,35 @@ class AddProductFragment : Fragment() {
                     return@launch
                 }
 
+                // ✅ NUEVO: Crear archivos para imagen2 e imagen3 si existen
+                val imageFile2 = selectedImageUri2?.let { uri ->
+                    withContext(Dispatchers.IO) {
+                        createImageFile(requireContext(), uri)
+                    }
+                }
+
+                val imageFile3 = selectedImageUri3?.let { uri ->
+                    withContext(Dispatchers.IO) {
+                        createImageFile(requireContext(), uri)
+                    }
+                }
+
                 val result = productRepository.createProductInApi(
                     name = name,
                     description = description,
                     price = price,
                     stock = stock,
-                    category = category, // ✅ NUEVO
-                    imageFile = imageFile
+                    category = category,
+                    imageFile = imageFile,
+                    imageFile2 = imageFile2, // ✅ NUEVO
+                    imageFile3 = imageFile3  // ✅ NUEVO
                 )
 
+                // ✅ Limpiar archivos temporales
                 withContext(Dispatchers.IO) {
                     imageFile.delete()
+                    imageFile2?.delete()
+                    imageFile3?.delete()
                 }
 
                 withContext(Dispatchers.Main) {

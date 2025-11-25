@@ -17,8 +17,7 @@ interface UserService {
         @Path("user_id") userId: Int
     ): Response<UserResponse>
 
-    // ✅ SOLUCIÓN: Crear dos métodos separados
-    // Método 1: Para actualizar SIN contraseña
+    // ✅ ACTUALIZADO: Incluye state
     @PATCH("user/{user_id}")
     @Headers("Content-Type: application/json")
     suspend fun updateUserWithoutPassword(
@@ -27,7 +26,7 @@ interface UserService {
         @Body userData: UpdateUserDataWithoutPassword
     ): Response<UserResponse>
 
-    // Método 2: Para actualizar CON contraseña
+    // ✅ ACTUALIZADO: Incluye state
     @PATCH("user/{user_id}")
     @Headers("Content-Type: application/json")
     suspend fun updateUserWithPassword(
@@ -49,23 +48,26 @@ data class UserResponse(
     val name: String,
     val email: String,
     val role: String,
+    val state: String? = "activo", // ✅ NUEVO
 
     @SerializedName("created_at")
     val created_at: Long?
 )
 
-// ✅ Para actualizar SIN contraseña
+// ✅ ACTUALIZADO: Para actualizar SIN contraseña
 data class UpdateUserDataWithoutPassword(
     val name: String,
     val email: String,
-    val role: String
+    val role: String,
+    val state: String // ✅ NUEVO
 )
 
-// ✅ Para actualizar CON contraseña
+// ✅ ACTUALIZADO: Para actualizar CON contraseña
 data class UpdateUserDataWithPassword(
     val name: String,
     val email: String,
     val role: String,
+    val state: String, // ✅ NUEVO
     val password: String
 )
 

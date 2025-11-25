@@ -11,6 +11,8 @@ data class Product(
     val description: String,
     val price: Double,
     val image: String,
+    val image2: String = "", // ✅ NUEVA: Segunda imagen
+    val image3: String = "", // ✅ NUEVA: Tercera imagen
     val stock: Int = 0,
-    val category: String = "" // ✅ NUEVO: Categoría del producto
+    val category: String = ""
 )

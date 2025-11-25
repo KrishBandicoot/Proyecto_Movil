@@ -38,7 +38,11 @@ class EditProductFragment : Fragment() {
     private lateinit var etProductStock: EditText
     private lateinit var spinnerCategory: Spinner
     private lateinit var imgProductPhoto: ImageView
+    private lateinit var imgProductPhoto2: ImageView // ✅ NUEVO
+    private lateinit var imgProductPhoto3: ImageView // ✅ NUEVO
     private lateinit var btnSelectImage: Button
+    private lateinit var btnSelectImage2: Button // ✅ NUEVO
+    private lateinit var btnSelectImage3: Button // ✅ NUEVO
     private lateinit var btnUpdateProduct: Button
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
@@ -46,8 +50,12 @@ class EditProductFragment : Fragment() {
     private lateinit var authRepository: AuthRepository
 
     private var selectedImageUri: Uri? = null
+    private var selectedImageUri2: Uri? = null // ✅ NUEVO
+    private var selectedImageUri3: Uri? = null // ✅ NUEVO
     private var currentProduct: Product? = null
     private var hasImageChanged = false
+    private var hasImage2Changed = false // ✅ NUEVO
+    private var hasImage3Changed = false // ✅ NUEVO
 
     private val categories = listOf(
         "Accesorios",
@@ -70,6 +78,32 @@ class EditProductFragment : Fragment() {
                 .load(uri)
                 .placeholder(R.drawable.ic_launcher_background)
                 .into(imgProductPhoto)
+        }
+    }
+
+    private val getImage2 = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri2 = uri
+            hasImage2Changed = true
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto2)
+        }
+    }
+
+    private val getImage3 = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri3 = uri
+            hasImage3Changed = true
+            Glide.with(this)
+                .load(uri)
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto3)
         }
     }
 
@@ -110,7 +144,11 @@ class EditProductFragment : Fragment() {
         etProductStock = view.findViewById(R.id.etProductStock)
         spinnerCategory = view.findViewById(R.id.spinnerCategory)
         imgProductPhoto = view.findViewById(R.id.imgProductPhoto)
+        imgProductPhoto2 = view.findViewById(R.id.imgProductPhoto2) // ✅ NUEVO
+        imgProductPhoto3 = view.findViewById(R.id.imgProductPhoto3) // ✅ NUEVO
         btnSelectImage = view.findViewById(R.id.btnSelectImage)
+        btnSelectImage2 = view.findViewById(R.id.btnSelectImage2) // ✅ NUEVO
+        btnSelectImage3 = view.findViewById(R.id.btnSelectImage3) // ✅ NUEVO
         btnUpdateProduct = view.findViewById(R.id.btnUpdateProduct)
         btnCancel = view.findViewById(R.id.btnCancel)
         progressBar = view.findViewById(R.id.progressBar)
@@ -133,6 +171,14 @@ class EditProductFragment : Fragment() {
     private fun setupListeners() {
         btnSelectImage.setOnClickListener {
             getImage.launch("image/*")
+        }
+
+        btnSelectImage2.setOnClickListener {
+            getImage2.launch("image/*")
+        }
+
+        btnSelectImage3.setOnClickListener {
+            getImage3.launch("image/*")
         }
 
         btnUpdateProduct.setOnClickListener {
@@ -186,18 +232,35 @@ class EditProductFragment : Fragment() {
         etProductPrice.setText(product.price.toString())
         etProductStock.setText(product.stock.toString())
 
-        // Seleccionar categoría en el spinner
         val categoryPosition = categories.indexOf(product.category)
         if (categoryPosition >= 0) {
             spinnerCategory.setSelection(categoryPosition)
         }
 
-        // Cargar imagen actual
+        // Cargar imagen principal
         Glide.with(this)
             .load(product.image)
             .placeholder(R.drawable.ic_launcher_background)
             .error(R.drawable.ic_launcher_background)
             .into(imgProductPhoto)
+
+        // ✅ NUEVO: Cargar imagen2 si existe
+        if (product.image2.isNotEmpty()) {
+            Glide.with(this)
+                .load(product.image2)
+                .placeholder(R.drawable.ic_launcher_background)
+                .error(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto2)
+        }
+
+        // ✅ NUEVO: Cargar imagen3 si existe
+        if (product.image3.isNotEmpty()) {
+            Glide.with(this)
+                .load(product.image3)
+                .placeholder(R.drawable.ic_launcher_background)
+                .error(R.drawable.ic_launcher_background)
+                .into(imgProductPhoto3)
+        }
     }
 
     private fun attemptUpdateProduct() {
@@ -267,7 +330,6 @@ class EditProductFragment : Fragment() {
         }
     }
 
-    // ✅ MÉTODO CORREGIDO en EditProductFragment.kt
     private fun updateProductInXano(
         name: String,
         description: String,
@@ -295,31 +357,38 @@ class EditProductFragment : Fragment() {
                     return@launch
                 }
 
-                android.util.Log.d("EditProductFragment", "========================================")
-                android.util.Log.d("EditProductFragment", "UPDATING PRODUCT")
-                android.util.Log.d("EditProductFragment", "========================================")
-                android.util.Log.d("EditProductFragment", "Product ID: $productId")
-                android.util.Log.d("EditProductFragment", "Has image changed: $hasImageChanged")
-                android.util.Log.d("EditProductFragment", "Selected image URI: $selectedImageUri")
-                android.util.Log.d("EditProductFragment", "========================================")
-
-                // ✅ CORREGIDO: Solo crear imageFile si realmente cambió la imagen
+                // ✅ Crear archivo solo si cambió la imagen principal
                 val imageFile = if (hasImageChanged && selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
                         try {
-                            val file = createImageFile(requireContext(), selectedImageUri!!)
-                            android.util.Log.d("EditProductFragment", "Image file created: ${file?.absolutePath}")
-                            android.util.Log.d("EditProductFragment", "Image file exists: ${file?.exists()}")
-                            file
+                            createImageFile(requireContext(), selectedImageUri!!)
                         } catch (e: Exception) {
-                            android.util.Log.e("EditProductFragment", "Error creating image file: ${e.message}", e)
                             null
                         }
                     }
-                } else {
-                    android.util.Log.d("EditProductFragment", "No image change - sending null")
-                    null
-                }
+                } else null
+
+                // ✅ NUEVO: Crear archivo para imagen2 si cambió
+                val imageFile2 = if (hasImage2Changed && selectedImageUri2 != null) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            createImageFile(requireContext(), selectedImageUri2!!)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                } else null
+
+                // ✅ NUEVO: Crear archivo para imagen3 si cambió
+                val imageFile3 = if (hasImage3Changed && selectedImageUri3 != null) {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            createImageFile(requireContext(), selectedImageUri3!!)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                } else null
 
                 val result = productRepository.updateProductInApi(
                     productId = productId,
@@ -328,18 +397,31 @@ class EditProductFragment : Fragment() {
                     price = price,
                     stock = stock,
                     category = category,
-                    imageFile = imageFile
+                    imageFile = imageFile,
+                    imageFile2 = imageFile2, // ✅ NUEVO
+                    imageFile3 = imageFile3  // ✅ NUEVO
                 )
 
-                // ✅ Limpiar archivo temporal si existe
+                // ✅ Limpiar archivos temporales
                 imageFile?.let {
                     withContext(Dispatchers.IO) {
                         try {
                             it.delete()
-                            android.util.Log.d("EditProductFragment", "Temp file deleted")
-                        } catch (e: Exception) {
-                            android.util.Log.e("EditProductFragment", "Error deleting temp file: ${e.message}")
-                        }
+                        } catch (e: Exception) {}
+                    }
+                }
+                imageFile2?.let {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            it.delete()
+                        } catch (e: Exception) {}
+                    }
+                }
+                imageFile3?.let {
+                    withContext(Dispatchers.IO) {
+                        try {
+                            it.delete()
+                        } catch (e: Exception) {}
                     }
                 }
 
@@ -352,7 +434,6 @@ class EditProductFragment : Fragment() {
                         ).show()
                         findNavController().navigateUp()
                     }.onFailure { exception ->
-                        android.util.Log.e("EditProductFragment", "Update failed: ${exception.message}", exception)
                         Toast.makeText(
                             requireContext(),
                             "✗ Error: ${exception.message}",
@@ -363,7 +444,6 @@ class EditProductFragment : Fragment() {
                 }
 
             } catch (e: Exception) {
-                android.util.Log.e("EditProductFragment", "Exception in updateProductInXano: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         requireContext(),

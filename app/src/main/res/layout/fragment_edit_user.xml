@@ -82,7 +82,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ✅ MEJORADO: Campo de contraseña con texto de ayuda más claro -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilPassword"
             android:layout_width="0dp"
@@ -108,7 +107,6 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- ✅ NUEVO: Recordatorio de requisitos de contraseña -->
         <TextView
             android:id="@+id/txtPasswordHint"
             android:layout_width="0dp"
@@ -168,6 +166,70 @@
 
         </RadioGroup>
 
+        <!-- ✅ NUEVO: Selector de Estado -->
+        <TextView
+            android:id="@+id/txtStateLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Estado de la cuenta"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/radioGroupRole"
+            android:layout_marginTop="24dp" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupState"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtStateLabel"
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:background="#F5F5F5">
+
+            <RadioButton
+                android:id="@+id/radioActivo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="✅ Activo (puede iniciar sesión)"
+                android:textSize="16sp"
+                android:textColor="#4CAF50"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radioBloqueado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🚫 Bloqueado (no puede iniciar sesión)"
+                android:textSize="16sp"
+                android:textColor="#F44336"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:layout_marginTop="8dp" />
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/txtStateWarning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="⚠️ Al bloquear un usuario, no podrá iniciar sesión en la aplicación"
+            android:textSize="12sp"
+            android:textColor="#FF9800"
+            android:padding="8dp"
+            android:background="#FFF3E0"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/radioGroupState"
+            android:layout_marginTop="8dp" />
+
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
@@ -175,7 +237,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/radioGroupRole"
+            app:layout_constraintTop_toBottomOf="@+id/txtStateWarning"
             android:layout_marginTop="24dp" />
 
         <LinearLayout
