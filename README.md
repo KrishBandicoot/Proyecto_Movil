@@ -1,9 +1,3 @@
-¡Claro que sí! Aquí tienes una propuesta completa para el archivo `README_BACKEND.md`. Está diseñado para ser incluido en tu repositorio y explica claramente cómo está estructurado el backend en Xano, cómo replicarlo desde cero si fuera necesario, y detalla la estructura de datos tal como la solicitaste.
-
-Puedes copiar y pegar el siguiente contenido en un archivo llamado `README_BACKEND.md` o agregarlo al final de tu `README.md` principal.
-
-***
-
 # 🛠️ Documentación y Configuración del Backend
 
 Este proyecto utiliza un backend RESTful implementado en **Xano**. A continuación se detalla la estructura de la base de datos, los endpoints disponibles y las instrucciones para replicar este backend en Xano o en cualquier otra plataforma (Supabase, Firebase, Spring Boot, etc.).
