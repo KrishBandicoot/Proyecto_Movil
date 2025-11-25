@@ -324,6 +324,8 @@ class EditProductFragment : Fragment() {
         }
     }
 
+    // ✅ SOLUCIÓN: Cambiar la función updateProductInXano en EditProductFragment.kt
+
     private fun updateProductInXano(
         name: String,
         description: String,
@@ -351,11 +353,29 @@ class EditProductFragment : Fragment() {
                     return@launch
                 }
 
+                // ✅ FIX: Usar timestamp único para todos los archivos
+                val timestamp = System.currentTimeMillis()
+
+                // ✅ LOG: Estado inicial
+                android.util.Log.d("EditProduct", "════════════════════════════════")
+                android.util.Log.d("EditProduct", "UPDATE PRODUCT - PREPARACIÓN")
+                android.util.Log.d("EditProduct", "════════════════════════════════")
+                android.util.Log.d("EditProduct", "Product ID: $productId")
+                android.util.Log.d("EditProduct", "hasImageChanged: $hasImageChanged")
+                android.util.Log.d("EditProduct", "hasImage2Changed: $hasImage2Changed")
+                android.util.Log.d("EditProduct", "hasImage3Changed: $hasImage3Changed")
+                android.util.Log.d("EditProduct", "selectedImageUri: ${selectedImageUri != null}")
+                android.util.Log.d("EditProduct", "selectedImageUri2: ${selectedImageUri2 != null}")
+                android.util.Log.d("EditProduct", "selectedImageUri3: ${selectedImageUri3 != null}")
+                android.util.Log.d("EditProduct", "════════════════════════════════")
+
+                // ✅ FIX: Crear archivos con nombres únicos
                 val imageFile = if (hasImageChanged && selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
                         try {
-                            createImageFile(requireContext(), selectedImageUri!!)
+                            createImageFileWithName(requireContext(), selectedImageUri!!, "edit_image1_$timestamp")
                         } catch (e: Exception) {
+                            android.util.Log.e("EditProduct", "Error creando image1: ${e.message}", e)
                             null
                         }
                     }
@@ -364,8 +384,9 @@ class EditProductFragment : Fragment() {
                 val imageFile2 = if (hasImage2Changed && selectedImageUri2 != null) {
                     withContext(Dispatchers.IO) {
                         try {
-                            createImageFile(requireContext(), selectedImageUri2!!)
+                            createImageFileWithName(requireContext(), selectedImageUri2!!, "edit_image2_$timestamp")
                         } catch (e: Exception) {
+                            android.util.Log.e("EditProduct", "Error creando image2: ${e.message}", e)
                             null
                         }
                     }
@@ -374,12 +395,22 @@ class EditProductFragment : Fragment() {
                 val imageFile3 = if (hasImage3Changed && selectedImageUri3 != null) {
                     withContext(Dispatchers.IO) {
                         try {
-                            createImageFile(requireContext(), selectedImageUri3!!)
+                            createImageFileWithName(requireContext(), selectedImageUri3!!, "edit_image3_$timestamp")
                         } catch (e: Exception) {
+                            android.util.Log.e("EditProduct", "Error creando image3: ${e.message}", e)
                             null
                         }
                     }
                 } else null
+
+                // ✅ LOG: Verificar archivos creados
+                android.util.Log.d("EditProduct", "════════════════════════════════")
+                android.util.Log.d("EditProduct", "ARCHIVOS CREADOS")
+                android.util.Log.d("EditProduct", "════════════════════════════════")
+                android.util.Log.d("EditProduct", "imageFile: ${imageFile?.name ?: "NULL"} (${imageFile?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "imageFile2: ${imageFile2?.name ?: "NULL"} (${imageFile2?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "imageFile3: ${imageFile3?.name ?: "NULL"} (${imageFile3?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "════════════════════════════════")
 
                 val result = productRepository.updateProductInApi(
                     productId = productId,
@@ -393,25 +424,15 @@ class EditProductFragment : Fragment() {
                     imageFile3 = imageFile3
                 )
 
-                imageFile?.let {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            it.delete()
-                        } catch (e: Exception) {}
-                    }
-                }
-                imageFile2?.let {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            it.delete()
-                        } catch (e: Exception) {}
-                    }
-                }
-                imageFile3?.let {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            it.delete()
-                        } catch (e: Exception) {}
+                // ✅ Limpiar archivos temporales
+                withContext(Dispatchers.IO) {
+                    try {
+                        imageFile?.delete()
+                        imageFile2?.delete()
+                        imageFile3?.delete()
+                        android.util.Log.d("EditProduct", "✓ Archivos temporales eliminados")
+                    } catch (e: Exception) {
+                        android.util.Log.e("EditProduct", "Error al eliminar temporales: ${e.message}")
                     }
                 }
 
@@ -445,6 +466,38 @@ class EditProductFragment : Fragment() {
             }
         }
     }
+
+    // ✅ NUEVA FUNCIÓN: Crear archivo con nombre específico
+    private fun createImageFileWithName(context: Context, imageUri: Uri, fileName: String): File? {
+        return try {
+            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, imageUri)
+                ImageDecoder.decodeBitmap(source)
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
+            }
+
+            val resizedBitmap = resizeBitmap(bitmap, 1024, 1024)
+
+            // ✅ FIX: Usar el nombre específico proporcionado
+            val tempFile = File(context.cacheDir, "$fileName.jpg")
+            val fos = FileOutputStream(tempFile)
+
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos)
+            fos.flush()
+            fos.close()
+
+            android.util.Log.d("EditProduct", "✓ Archivo creado: ${tempFile.name} (${tempFile.length()} bytes)")
+            tempFile
+
+        } catch (e: Exception) {
+            android.util.Log.e("EditProduct", "✗ Error creando archivo: ${e.message}", e)
+            null
+        }
+    }
+
+// La función createImageFile original ya no se usa
 
     private fun resetButton() {
         progressBar.visibility = View.GONE
