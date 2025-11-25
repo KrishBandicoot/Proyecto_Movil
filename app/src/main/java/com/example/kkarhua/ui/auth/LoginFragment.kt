@@ -66,8 +66,11 @@ class LoginFragment : Fragment() {
         tilPassword = view.findViewById(R.id.tilPassword)
         progressBar = view.findViewById(R.id.progressBar)
 
-        etEmail.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
-        etPassword.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        // ✅ Deshabilitar completamente autofill
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            etEmail.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+            etPassword.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO
+        }
     }
 
     private fun setupViewModel() {
@@ -135,6 +138,7 @@ class LoginFragment : Fragment() {
                 Log.d(TAG, "User name: ${it.user?.name}")
                 Log.d(TAG, "User email: ${it.user?.email}")
                 Log.d(TAG, "User role: ${it.user?.role}")
+                Log.d(TAG, "User state: ${it.user?.state}")
                 Log.d(TAG, "========================================")
 
                 val userName = it.user?.name ?: "Usuario"
@@ -155,12 +159,35 @@ class LoginFragment : Fragment() {
 
         authViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.let {
-                Log.e(TAG, "Error en login: $it")
-                Toast.makeText(
-                    requireContext(),
-                    "✗ $it",
-                    Toast.LENGTH_LONG
-                ).show()
+                Log.e(TAG, "========================================")
+                Log.e(TAG, "ERROR EN LOGIN")
+                Log.e(TAG, "Error message: '$it'")
+                Log.e(TAG, "========================================")
+
+                // ✅ VERIFICAR SI EL USUARIO ESTÁ BLOQUEADO
+                if (it == "USUARIO BLOQUEADO") {
+                    Toast.makeText(
+                        requireContext(),
+                        "❌ USUARIO BLOQUEADO\n\nTu cuenta ha sido bloqueada.\nContacta al administrador.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Redirigir a SplashFragment y limpiar back stack
+                    findNavController().navigate(
+                        R.id.splashFragment,
+                        null,
+                        androidx.navigation.NavOptions.Builder()
+                            .setPopUpTo(R.id.nav_graph, true)
+                            .build()
+                    )
+                } else {
+                    Toast.makeText(
+                        requireContext(),
+                        "✗ $it",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
                 authViewModel.clearError()
             }
         }

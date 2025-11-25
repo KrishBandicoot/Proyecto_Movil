@@ -40,7 +40,7 @@
             android:inputType="textEmailAddress"
             android:padding="16dp"
             android:importantForAutofill="no"
-            android:autofillHints="" />
+            android:autofillHints="username" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -64,7 +64,7 @@
             android:inputType="textPassword"
             android:padding="16dp"
             android:importantForAutofill="no"
-            android:autofillHints="" />
+            android:autofillHints="password" />
 
     </com.google.android.material.textfield.TextInputLayout>
 

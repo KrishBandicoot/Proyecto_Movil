@@ -6,7 +6,8 @@ import com.google.gson.annotations.SerializedName
 data class SignupRequest(
     val name: String,
     val email: String,
-    val password: String
+    val password: String,
+    val state: String = "activo" // ✅ NUEVO
 )
 
 data class LoginRequest(
@@ -14,12 +15,12 @@ data class LoginRequest(
     val password: String
 )
 
-// ✅ NUEVO: Request para registro por admin (incluye rol)
 data class AdminSignupRequest(
     val name: String,
     val email: String,
     val password: String,
-    val role: String  // "admin" o "member"
+    val role: String,
+    val state: String = "activo" // ✅ NUEVO
 )
 
 // Response models
@@ -41,6 +42,7 @@ data class UserData(
     val name: String,
     val email: String,
     val role: String? = "member",
+    val state: String? = "activo", // ✅ NUEVO
 
     @SerializedName("created_at")
     val created_at: Long? = null
@@ -51,12 +53,12 @@ data class MeResponse(
     val name: String,
     val email: String,
     val role: String? = "member",
+    val state: String? = "activo", // ✅ NUEVO
 
     @SerializedName("created_at")
     val created_at: Long? = null
 )
 
-// Error response model
 data class ErrorResponse(
     val message: String? = null,
     val error: String? = null

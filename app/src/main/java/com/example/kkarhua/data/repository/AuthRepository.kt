@@ -18,12 +18,12 @@ class AuthRepository(context: Context) {
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_ROLE = "user_role"
-        private const val KEY_USER_STATE = "user_state" // ✅ NUEVO
+        private const val KEY_USER_STATE = "user_state"
     }
 
     suspend fun signup(name: String, email: String, password: String): Result<AuthResponse> {
         return try {
-            val request = SignupRequest(name, email, password) // Ya incluye state = "activo"
+            val request = SignupRequest(name, email, password)
             val response = authService.signup(request)
 
             if (response.isSuccessful) {
@@ -50,7 +50,7 @@ class AuthRepository(context: Context) {
                 return Result.failure(Exception("No hay sesión de administrador activa"))
             }
 
-            val request = AdminSignupRequest(name, email, password, role) // Ya incluye state = "activo"
+            val request = AdminSignupRequest(name, email, password, role)
             val response = authService.adminSignup("Bearer $token", request)
 
             if (response.isSuccessful) {
@@ -99,20 +99,32 @@ class AuthRepository(context: Context) {
 
                         if (meResult.isSuccess) {
                             val meResponse = meResult.getOrNull()
-                            Log.d(TAG, "✓ Datos del usuario obtenidos:")
-                            Log.d(TAG, "  - ID: ${meResponse?.id}")
-                            Log.d(TAG, "  - Name: ${meResponse?.name}")
-                            Log.d(TAG, "  - Email: ${meResponse?.email}")
-                            Log.d(TAG, "  - Role: ${meResponse?.role}")
-                            Log.d(TAG, "  - State: ${meResponse?.state}")
 
-                            // ✅ NUEVO: Verificar si el usuario está bloqueado
-                            val userState = meResponse?.state ?: "activo"
+                            // ✅ LOGS DE DIAGNÓSTICO
+                            Log.d(TAG, "========================================")
+                            Log.d(TAG, "DIAGNÓSTICO DE STATE")
+                            Log.d(TAG, "========================================")
+                            Log.d(TAG, "State recibido: '${meResponse?.state}'")
+                            Log.d(TAG, "State es null: ${meResponse?.state == null}")
+                            Log.d(TAG, "State length: ${meResponse?.state?.length}")
+                            Log.d(TAG, "State lowercase: '${meResponse?.state?.lowercase()}'")
+                            Log.d(TAG, "Comparación con 'bloqueado': ${meResponse?.state == "bloqueado"}")
+                            Log.d(TAG, "Comparación lowercase: ${meResponse?.state?.lowercase() == "bloqueado"}")
+                            Log.d(TAG, "========================================")
+
+                            // ✅ VERIFICAR SI EL USUARIO ESTÁ BLOQUEADO
+                            val userState = meResponse?.state?.lowercase()?.trim() ?: "activo"
+
+                            Log.d(TAG, "State procesado: '$userState'")
+                            Log.d(TAG, "¿Está bloqueado?: ${userState == "bloqueado"}")
+
                             if (userState == "bloqueado") {
-                                Log.e(TAG, "✗ Usuario bloqueado")
+                                Log.e(TAG, "✗✗✗ USUARIO BLOQUEADO DETECTADO ✗✗✗")
                                 logout() // Limpiar sesión
-                                return Result.failure(Exception("Tu cuenta ha sido bloqueada. Contacta al administrador."))
+                                return Result.failure(Exception("USUARIO BLOQUEADO"))
                             }
+
+                            Log.d(TAG, "✓ Usuario no está bloqueado, continuando...")
 
                             // Crear AuthResponse completo con los datos de /auth/me
                             val completeAuthResponse = AuthResponse(
@@ -122,7 +134,7 @@ class AuthRepository(context: Context) {
                                     name = meResponse?.name ?: "",
                                     email = meResponse?.email ?: "",
                                     role = meResponse?.role ?: "member",
-                                    state = userState, // ✅ NUEVO
+                                    state = meResponse?.state ?: "activo",
                                     created_at = meResponse?.created_at
                                 )
                             )
@@ -131,6 +143,7 @@ class AuthRepository(context: Context) {
                             Result.success(completeAuthResponse)
                         } else {
                             Log.e(TAG, "✗ Error al obtener datos del usuario")
+                            logout()
                             Result.failure(Exception("Error al obtener datos del usuario"))
                         }
                     } else {
@@ -144,7 +157,7 @@ class AuthRepository(context: Context) {
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(TAG, "✗ Error ${response.code()}: $errorBody")
-                Result.failure(Exception("Error ${response.code()}: $errorBody"))
+                Result.failure(Exception("Credenciales incorrectas"))
             }
         } catch (e: Exception) {
             Log.e(TAG, "✗ Exception: ${e.message}", e)
@@ -179,7 +192,7 @@ class AuthRepository(context: Context) {
                         putString(KEY_USER_NAME, meResponse.name)
                         putString(KEY_USER_EMAIL, meResponse.email)
                         putString(KEY_USER_ROLE, meResponse.role ?: "member")
-                        putString(KEY_USER_STATE, meResponse.state ?: "activo") // ✅ NUEVO
+                        putString(KEY_USER_STATE, meResponse.state ?: "activo")
                         apply()
                     }
 
@@ -203,7 +216,7 @@ class AuthRepository(context: Context) {
         val token = authResponse.getToken() ?: ""
         val user = authResponse.user
         val role = user?.role ?: "member"
-        val state = user?.state ?: "activo" // ✅ NUEVO
+        val state = user?.state ?: "activo"
 
         Log.d(TAG, "========================================")
         Log.d(TAG, "GUARDANDO DATOS DE USUARIO")
@@ -213,7 +226,7 @@ class AuthRepository(context: Context) {
         Log.d(TAG, "User Name: ${user?.name}")
         Log.d(TAG, "User Email: ${user?.email}")
         Log.d(TAG, "User Role: '$role'")
-        Log.d(TAG, "User State: '$state'") // ✅ NUEVO
+        Log.d(TAG, "User State: '$state'")
         Log.d(TAG, "========================================")
 
         prefs.edit().apply {
@@ -222,7 +235,7 @@ class AuthRepository(context: Context) {
             putString(KEY_USER_NAME, user?.name ?: "")
             putString(KEY_USER_EMAIL, user?.email ?: "")
             putString(KEY_USER_ROLE, role)
-            putString(KEY_USER_STATE, state) // ✅ NUEVO
+            putString(KEY_USER_STATE, state)
             apply()
         }
     }
@@ -247,12 +260,10 @@ class AuthRepository(context: Context) {
         return prefs.getString(KEY_USER_ROLE, "member") ?: "member"
     }
 
-    // ✅ NUEVO: Obtener estado del usuario
     fun getUserState(): String {
         return prefs.getString(KEY_USER_STATE, "activo") ?: "activo"
     }
 
-    // ✅ NUEVO: Verificar si está bloqueado
     fun isBlocked(): Boolean {
         return getUserState() == "bloqueado"
     }
