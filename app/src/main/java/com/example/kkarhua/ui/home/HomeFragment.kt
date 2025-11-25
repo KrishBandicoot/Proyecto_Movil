@@ -18,7 +18,8 @@ class HomeFragment : Fragment() {
 
     private lateinit var btnLogout: Button
     private lateinit var btnAdminPanel: Button
-    private lateinit var btnMyPurchases: Button // ✅ NUEVO
+    private lateinit var btnMyPurchases: Button
+    private lateinit var btnEditProfile: Button // ✅ NUEVO
     private lateinit var titleText: TextView
     private lateinit var authRepository: AuthRepository
 
@@ -49,7 +50,8 @@ class HomeFragment : Fragment() {
         titleText = view.findViewById(R.id.titleText)
         btnLogout = view.findViewById(R.id.btnLogout)
         btnAdminPanel = view.findViewById(R.id.btnAdminPanel)
-        btnMyPurchases = view.findViewById(R.id.btnMyPurchases) // ✅ NUEVO
+        btnMyPurchases = view.findViewById(R.id.btnMyPurchases)
+        btnEditProfile = view.findViewById(R.id.btnEditProfile) // ✅ NUEVO
     }
 
     private fun setupAnimations() {
@@ -57,8 +59,9 @@ class HomeFragment : Fragment() {
         val slideUp = AnimationUtils.loadAnimation(requireContext(), R.anim.slide_up)
 
         titleText.startAnimation(fadeIn)
+        btnEditProfile.startAnimation(slideUp) // ✅ NUEVO
+        btnMyPurchases.startAnimation(slideUp)
         btnLogout.startAnimation(slideUp)
-        btnMyPurchases.startAnimation(slideUp) // ✅ NUEVO
 
         if (authRepository.isAdmin()) {
             btnAdminPanel.startAnimation(slideUp)
@@ -76,10 +79,15 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_homeFragment_to_adminPanelFragment)
         }
 
-        // ✅ NUEVO: Navegar a Mis Compras
         btnMyPurchases.setOnClickListener {
             animateButtonClick(it)
             findNavController().navigate(R.id.action_homeFragment_to_myPurchasesFragment)
+        }
+
+        // ✅ NUEVO: Navegar a Editar Perfil
+        btnEditProfile.setOnClickListener {
+            animateButtonClick(it)
+            findNavController().navigate(R.id.action_homeFragment_to_editProfileFragment)
         }
     }
 

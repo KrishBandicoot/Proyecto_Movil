@@ -22,27 +22,59 @@
         android:id="@+id/etSearch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Buscar productos..."
+        android:hint="🔍 Buscar productos..."
         android:padding="12dp"
+        android:background="@android:drawable/editbox_background"
+        android:inputType="text"
+        android:imeOptions="actionSearch"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
         android:layout_margin="16dp" />
+
+    <!-- Filtro de categorías -->
+    <TextView
+        android:id="@+id/txtCategoryLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Categoría:"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etSearch"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerCategoryFilter"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="@android:drawable/btn_dropdown"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtCategoryLabel"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp" />
 
     <!-- SwipeRefreshLayout con RecyclerView -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/etSearch">
+        app:layout_constraintTop_toBottomOf="@+id/spinnerCategoryFilter">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerProducts"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:clipToPadding="false" />
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
@@ -65,7 +97,7 @@
         android:gravity="center"
         android:padding="16dp"
         android:text="Error al cargar productos"
-        android:textColor="@android:color/holo_red_dark"
+        android:textColor="@android:color/darker_gray"
         android:textSize="16sp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"

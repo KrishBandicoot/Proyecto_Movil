@@ -44,11 +44,20 @@
             app:destination="@id/splashFragment"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
-        <!-- ✅ NUEVO: Navegar a Mis Compras -->
         <action
             android:id="@+id/action_homeFragment_to_myPurchasesFragment"
             app:destination="@id/myPurchasesFragment" />
+        <!-- ✅ NUEVO: Navegar a Editar Perfil -->
+        <action
+            android:id="@+id/action_homeFragment_to_editProfileFragment"
+            app:destination="@id/editProfileFragment" />
     </fragment>
+
+    <!-- ✅ NUEVO: Edit Profile Fragment -->
+    <fragment
+        android:id="@+id/editProfileFragment"
+        android:name="com.example.kkarhua.ui.profile.EditProfileFragment"
+        android:label="Editar Perfil" />
 
     <!-- ✅ NUEVO: Mis Compras Fragment -->
     <fragment

@@ -6,6 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.Spinner
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
@@ -19,6 +22,7 @@ import com.example.kkarhua.R
 import com.example.kkarhua.data.local.AppDatabase
 import com.example.kkarhua.data.local.CartItem
 import com.example.kkarhua.data.local.Product
+import com.example.kkarhua.data.local.ProductCategory
 import com.example.kkarhua.data.repository.CartRepository
 import com.example.kkarhua.data.repository.ProductRepository
 import com.example.kkarhua.viewmodel.CartViewModel
@@ -30,6 +34,7 @@ class ProductListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var etSearch: EditText
+    private lateinit var spinnerCategoryFilter: Spinner
     private lateinit var progressBar: ProgressBar
     private lateinit var txtError: TextView
     private lateinit var swipeRefresh: SwipeRefreshLayout
@@ -38,6 +43,8 @@ class ProductListFragment : Fragment() {
     private lateinit var productAdapter: ProductAdapter
 
     private var allProducts = listOf<Product>()
+    private var currentSearchQuery = ""
+    private var currentCategoryFilter = "Todas"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,6 +60,7 @@ class ProductListFragment : Fragment() {
         setupViews(view)
         setupRecyclerView()
         setupViewModels()
+        setupCategoryFilter()
         setupSearch()
         setupSwipeRefresh()
         observeProducts()
@@ -62,20 +70,10 @@ class ProductListFragment : Fragment() {
     private fun setupViews(view: View) {
         recyclerView = view.findViewById(R.id.recyclerProducts)
         etSearch = view.findViewById(R.id.etSearch)
-
-        // Agregar estos elementos al layout si no existen
-        progressBar = view.findViewById<ProgressBar?>(R.id.progressBar)
-            ?: ProgressBar(requireContext()).apply {
-                visibility = View.GONE
-            }
-
-        txtError = view.findViewById<TextView?>(R.id.txtError)
-            ?: TextView(requireContext()).apply {
-                visibility = View.GONE
-            }
-
-        swipeRefresh = view.findViewById<SwipeRefreshLayout?>(R.id.swipeRefresh)
-            ?: SwipeRefreshLayout(requireContext())
+        spinnerCategoryFilter = view.findViewById(R.id.spinnerCategoryFilter)
+        progressBar = view.findViewById(R.id.progressBar)
+        txtError = view.findViewById(R.id.txtError)
+        swipeRefresh = view.findViewById(R.id.swipeRefresh)
     }
 
     private fun setupRecyclerView() {
@@ -109,9 +107,33 @@ class ProductListFragment : Fragment() {
             .get(CartViewModel::class.java)
     }
 
+    private fun setupCategoryFilter() {
+        // Agregar "Todas" al inicio de las categorías
+        val categories = listOf("Todas") + ProductCategory.getAllCategories()
+
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            categories
+        )
+        spinnerCategoryFilter.adapter = adapter
+
+        spinnerCategoryFilter.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                currentCategoryFilter = categories[position]
+                applyFilters()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // No hacer nada
+            }
+        }
+    }
+
     private fun setupSearch() {
         etSearch.addTextChangedListener { text ->
-            filterProducts(text.toString())
+            currentSearchQuery = text.toString().trim()
+            applyFilters()
         }
     }
 
@@ -124,7 +146,7 @@ class ProductListFragment : Fragment() {
     private fun observeProducts() {
         productViewModel.products.observe(viewLifecycleOwner) { products ->
             allProducts = products
-            productAdapter.submitList(products)
+            applyFilters()
 
             if (products.isEmpty() && productViewModel.isLoading.value != true) {
                 txtError.visibility = View.VISIBLE
@@ -150,19 +172,40 @@ class ProductListFragment : Fragment() {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
             }
         }
-
     }
 
-    private fun filterProducts(query: String) {
-        val filteredList = if (query.isEmpty()) {
-            allProducts
-        } else {
-            allProducts.filter { product ->
-                product.name.contains(query, ignoreCase = true) ||
-                        product.description.contains(query, ignoreCase = true)
+    private fun applyFilters() {
+        var filteredList = allProducts
+
+        // Filtrar por categoría
+        if (currentCategoryFilter != "Todas") {
+            filteredList = filteredList.filter { product ->
+                product.category.equals(currentCategoryFilter, ignoreCase = true)
             }
         }
+
+        // Filtrar por búsqueda
+        if (currentSearchQuery.isNotEmpty()) {
+            filteredList = filteredList.filter { product ->
+                product.name.contains(currentSearchQuery, ignoreCase = true) ||
+                        product.description.contains(currentSearchQuery, ignoreCase = true) ||
+                        product.category.contains(currentSearchQuery, ignoreCase = true)
+            }
+        }
+
         productAdapter.submitList(filteredList)
+
+        // Mostrar mensaje si no hay resultados
+        if (filteredList.isEmpty() && allProducts.isNotEmpty()) {
+            txtError.visibility = View.VISIBLE
+            txtError.text = if (currentSearchQuery.isNotEmpty()) {
+                "No se encontraron productos con \"$currentSearchQuery\""
+            } else {
+                "No hay productos en esta categoría"
+            }
+        } else {
+            txtError.visibility = View.GONE
+        }
     }
 
     private fun navigateToProductDetail(product: Product) {
