@@ -1,13 +1,16 @@
 package com.example.kkarhua.data.repository
 
+import android.util.Base64
 import android.util.Log
 import com.example.kkarhua.data.local.Product
 import com.example.kkarhua.data.local.ProductDao
 import com.example.kkarhua.data.remote.RetrofitClient
 import com.example.kkarhua.data.remote.getImageUrl
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
@@ -16,6 +19,9 @@ class ProductRepository(private val productDao: ProductDao) {
 
     private val apiService = RetrofitClient.apiService
     private val TAG = "ProductRepository"
+
+    // String Base64 de una imagen JPEG blanca de 1x1 pixel (Para el hack de Edit)
+    private val TINY_IMAGE_BASE64 = "/9j/4AAQSkZJRgABAQEAYABgAAD/4QAiRXhpZgAATU0AKgAAAAgAAQESAAMAAAABAAEAAAAAAAD/2wBDAAIBAQIBAQICAgICAgICAwUDAwMDAwYEBAMFBwYHBwcGBwcICQsJCAgKCAcHCg0KCgsMDAwMBwkODw0MDgsMDAz/2wBDAQICAgMDAwYDAwYMCAcIDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAz/wAARCAABAAEGMQD/2gAMAwEAAhEDEQA/AH8AP/Z"
 
     fun getAllProducts(): Flow<List<Product>> {
         return productDao.getAllProducts()
@@ -121,7 +127,18 @@ class ProductRepository(private val productDao: ProductDao) {
         }
     }
 
-    // Este método se mantiene inalterado.
+    // Helper para detectar si es PNG o JPG
+    private fun getFileMediaType(file: File): MediaType? {
+        return if (file.extension.equals("png", ignoreCase = true)) {
+            "image/png".toMediaTypeOrNull()
+        } else {
+            "image/jpeg".toMediaTypeOrNull()
+        }
+    }
+
+    // ============================================================================================
+    // 1. CREATE PRODUCT (ADD PRODUCT) - DEBUGGING ACTIVADO
+    // ============================================================================================
     suspend fun createProductInApi(
         name: String,
         description: String,
@@ -133,74 +150,92 @@ class ProductRepository(private val productDao: ProductDao) {
         imageFile3: File? = null
     ): Result<Product> {
         return try {
-            if (!imageFile.exists()) {
-                return Result.failure(Exception("Archivo no existe"))
-            }
+            Log.d(TAG, "════════ DEBUG ADD PRODUCT ════════")
+            Log.d(TAG, "Parametro Img1: ${imageFile.name} | Size: ${imageFile.length()}")
+            Log.d(TAG, "Parametro Img2: ${imageFile2?.name} | Size: ${imageFile2?.length()}")
+            Log.d(TAG, "Parametro Img3: ${imageFile3?.name} | Size: ${imageFile3?.length()}")
 
+            // 1. VALIDACIONES
+            if (!imageFile.exists() || imageFile.length() == 0L) return Result.failure(Exception("Img1 vacía"))
+            if (imageFile2 == null || !imageFile2.exists()) return Result.failure(Exception("Img2 obligatoria"))
+            if (imageFile3 == null || !imageFile3.exists()) return Result.failure(Exception("Img3 obligatoria"))
+
+            // 2. TEXT BODIES
             val nameBody = name.toRequestBody("text/plain".toMediaTypeOrNull())
             val descriptionBody = description.toRequestBody("text/plain".toMediaTypeOrNull())
             val priceBody = price.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val stockBody = stock.toString().toRequestBody("text/plain".toMediaTypeOrNull())
             val categoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            val requestFile = imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            val imagePart = MultipartBody.Part.createFormData("image", imageFile.name, requestFile)
+            // 3. PREPARACIÓN DE IMÁGENES (VARIABLES ÚNICAS PARA EVITAR ERRORES)
 
-            val imagePart2 = imageFile2?.let { file ->
-                if (file.exists()) {
-                    val requestFile2 = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    MultipartBody.Part.createFormData("image2", file.name, requestFile2)
-                } else null
-            }
+            // --- IMAGEN 1 ---
+            val mime1 = getFileMediaType(imageFile)
+            val reqBodyImg1 = imageFile.asRequestBody(mime1)
+            val partImg1 = MultipartBody.Part.createFormData("image", imageFile.name, reqBodyImg1)
+            Log.d(TAG, ">> Part 1 creada con: ${imageFile.name} ($mime1)")
 
-            val imagePart3 = imageFile3?.let { file ->
-                if (file.exists()) {
-                    val requestFile3 = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                    MultipartBody.Part.createFormData("image3", file.name, requestFile3)
-                } else null
-            }
+            // --- IMAGEN 2 ---
+            val mime2 = getFileMediaType(imageFile2)
+            val reqBodyImg2 = imageFile2.asRequestBody(mime2)
+            val partImg2 = MultipartBody.Part.createFormData("image2", imageFile2.name, reqBodyImg2)
+            Log.d(TAG, ">> Part 2 creada con: ${imageFile2.name} ($mime2)")
 
+            // --- IMAGEN 3 ---
+            val mime3 = getFileMediaType(imageFile3)
+            val reqBodyImg3 = imageFile3.asRequestBody(mime3)
+            val partImg3 = MultipartBody.Part.createFormData("image3", imageFile3.name, reqBodyImg3)
+            Log.d(TAG, ">> Part 3 creada con: ${imageFile3.name} ($mime3)")
+
+            // 4. LLAMADA API
             val response = apiService.createProduct(
                 name = nameBody,
                 description = descriptionBody,
                 price = priceBody,
                 stock = stockBody,
                 category = categoryBody,
-                image = imagePart,
-                image2 = imagePart2,
-                image3 = imagePart3
+                image = partImg1,  // Única variable partImg1
+                image2 = partImg2, // Única variable partImg2
+                image3 = partImg3  // Única variable partImg3
             )
 
             when {
                 response.isSuccessful && response.body() != null -> {
-                    val productResponse = response.body()!!
-                    val imageUrl = productResponse.image.getImageUrl()
-                    val imageUrl2 = productResponse.image2.getImageUrl()
-                    val imageUrl3 = productResponse.image3.getImageUrl()
+                    val prod = response.body()!!
+                    Log.d(TAG, "✓ Éxito. URLs recibidas:")
+                    Log.d(TAG, "  1: ${prod.image.getImageUrl()}")
+                    Log.d(TAG, "  2: ${prod.image2.getImageUrl()}")
+                    Log.d(TAG, "  3: ${prod.image3.getImageUrl()}")
 
                     val product = Product(
-                        id = productResponse.id.toString(),
-                        name = productResponse.name,
-                        description = productResponse.description,
-                        price = productResponse.price,
-                        image = imageUrl,
-                        image2 = imageUrl2,
-                        image3 = imageUrl3,
-                        stock = productResponse.stock,
-                        category = productResponse.category
+                        id = prod.id.toString(),
+                        name = prod.name,
+                        description = prod.description,
+                        price = prod.price,
+                        image = prod.image.getImageUrl(),
+                        image2 = prod.image2.getImageUrl(),
+                        image3 = prod.image3.getImageUrl(),
+                        stock = prod.stock,
+                        category = prod.category
                     )
                     insertProduct(product)
                     Result.success(product)
                 }
                 else -> {
-                    Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+                    val err = response.errorBody()?.string()
+                    Log.e(TAG, "Error API: $err")
+                    Result.failure(Exception("Error ${response.code()}: $err"))
                 }
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Exception: ${e.message}", e)
             Result.failure(e)
         }
     }
 
+    // ============================================================================================
+    // 2. UPDATE PRODUCT (EDIT PRODUCT)
+    // ============================================================================================
     suspend fun updateProductInApi(
         productId: Int,
         name: String,
@@ -213,163 +248,93 @@ class ProductRepository(private val productDao: ProductDao) {
         imageFile3: File? = null
     ): Result<Product> {
         return try {
-            Log.d(TAG, "════════════════════════════════════════")
-            Log.d(TAG, "UPDATE PRODUCT - INICIO")
-            Log.d(TAG, "════════════════════════════════════════")
-            Log.d(TAG, "Product ID: $productId")
-            Log.d(TAG, "Has image1: ${imageFile != null && imageFile.exists()}")
-            Log.d(TAG, "Has image2: ${imageFile2 != null && imageFile2.exists()}")
-            Log.d(TAG, "Has image3: ${imageFile3 != null && imageFile3.exists()}")
+            Log.d(TAG, "UPDATE PRODUCT - INICIO ID: $productId")
 
-            // Función auxiliar para subir imagen temporal
+            // Helper temporal para editar (repite la imagen para pasar validación de Xano)
             suspend fun uploadTempImage(file: File): com.example.kkarhua.data.remote.ImageUpdateData? {
-                val tempNameBody = "TEMP_${System.currentTimeMillis()}".toRequestBody("text/plain".toMediaTypeOrNull())
-                val tempDescBody = "temp".toRequestBody("text/plain".toMediaTypeOrNull())
-                val tempPriceBody = "1".toRequestBody("text/plain".toMediaTypeOrNull())
-                val tempStockBody = "1".toRequestBody("text/plain".toMediaTypeOrNull())
-                val tempCategoryBody = category.toRequestBody("text/plain".toMediaTypeOrNull())
+                val tempName = "TEMP_${System.currentTimeMillis()}".toRequestBody("text/plain".toMediaTypeOrNull())
+                val tempDesc = "temp".toRequestBody("text/plain".toMediaTypeOrNull())
+                val tempPrice = "1".toRequestBody("text/plain".toMediaTypeOrNull())
+                val tempStock = "1".toRequestBody("text/plain".toMediaTypeOrNull())
+                val tempCat = category.toRequestBody("text/plain".toMediaTypeOrNull())
 
-                // 1. Preparamos el archivo real
-                val requestFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                val mediaType = getFileMediaType(file)
+                val reqFile = file.asRequestBody(mediaType)
 
-                // 2. CORRECCIÓN IMPORTANTE:
-                // Reutilizamos el MISMO archivo real para los 3 campos (image, image2, image3).
-                // Xano validará que los 3 son imágenes válidas y no fallará.
-                // Aunque subimos el archivo 3 veces, solo nos importa el primero para obtener la URL.
-                val imagePart = MultipartBody.Part.createFormData("image", file.name, requestFile)
-                val imagePart2 = MultipartBody.Part.createFormData("image2", file.name, requestFile)
-                val imagePart3 = MultipartBody.Part.createFormData("image3", file.name, requestFile)
+                // AQUÍ SÍ repetimos intencionalmente para el HACK de Edición
+                val p1 = MultipartBody.Part.createFormData("image", file.name, reqFile)
+                val p2 = MultipartBody.Part.createFormData("image2", file.name, reqFile)
+                val p3 = MultipartBody.Part.createFormData("image3", file.name, reqFile)
 
-                val tempResponse = apiService.createProduct(
-                    name = tempNameBody,
-                    description = tempDescBody,
-                    price = tempPriceBody,
-                    stock = tempStockBody,
-                    category = tempCategoryBody,
-                    image = imagePart,
-                    image2 = imagePart2, // Usamos la imagen real
-                    image3 = imagePart3  // Usamos la imagen real
+                val tempRes = apiService.createProduct(
+                    name = tempName, description = tempDesc, price = tempPrice,
+                    stock = tempStock, category = tempCat,
+                    image = p1, image2 = p2, image3 = p3
                 )
 
-                if (tempResponse.isSuccessful && tempResponse.body() != null) {
-                    val tempProduct = tempResponse.body()!!
-                    val tempId = tempProduct.id
-                    val imageObject = tempProduct.image
+                if (tempRes.isSuccessful && tempRes.body() != null) {
+                    val tProd = tempRes.body()!!
+                    val tId = tProd.id
+                    val imgObj = tProd.image
 
-                    if (imageObject == null || imageObject.url.isNullOrEmpty()) {
-                        val errorBody = tempResponse.errorBody()?.string()
-                        Log.e(TAG, "✗ Image object is null: ${tempResponse.code()} - $errorBody")
-                        try { apiService.deleteProduct(tempId) } catch (e: Exception) {}
+                    if (imgObj == null || imgObj.url.isNullOrEmpty()) {
+                        try { apiService.deleteProduct(tId) } catch (e: Exception) {}
                         return null
                     }
 
-                    Log.d(TAG, "✓ Temp image uploaded. Path: ${imageObject.path}")
-
-                    try {
-                        apiService.deleteProduct(tempId)
-                    } catch (e: Exception) {
-                        Log.w(TAG, "No se pudo eliminar producto temporal")
-                    }
+                    try { apiService.deleteProduct(tId) } catch (e: Exception) {}
 
                     return com.example.kkarhua.data.remote.ImageUpdateData(
-                        path = imageObject.path ?: "",
-                        name = imageObject.name ?: "",
-                        type = imageObject.type ?: "",
-                        size = imageObject.size ?: 0,
-                        mime = imageObject.mime ?: "",
-                        url = imageObject.url ?: "",
+                        path = imgObj.path ?: "",
+                        name = imgObj.name ?: "",
+                        type = imgObj.type ?: "",
+                        size = imgObj.size ?: 0,
+                        mime = imgObj.mime ?: "",
+                        url = imgObj.url ?: "",
                         meta = com.example.kkarhua.data.remote.ImageMetaUpdate(
-                            width = imageObject.meta?.width ?: 0,
-                            height = imageObject.meta?.height ?: 0
+                            width = imgObj.meta?.width ?: 0,
+                            height = imgObj.meta?.height ?: 0
                         )
                     )
                 }
-
-                val errorBody = tempResponse.errorBody()?.string()
-                Log.e(TAG, "✗ Temp product creation failed: ${tempResponse.code()} - $errorBody")
                 return null
             }
 
-            val imageData = if (imageFile != null && imageFile.exists()) {
-                Log.d(TAG, "→ Subiendo imagen1...")
-                uploadTempImage(imageFile)
-            } else {
-                Log.d(TAG, "→ Imagen1 no cambió, no se sube")
-                null
-            }
-
-            val imageData2 = if (imageFile2 != null && imageFile2.exists()) {
-                Log.d(TAG, "→ Subiendo imagen2...")
-                uploadTempImage(imageFile2)
-            } else {
-                Log.d(TAG, "→ Imagen2 no cambió, no se sube")
-                null
-            }
-
-            val imageData3 = if (imageFile3 != null && imageFile3.exists()) {
-                Log.d(TAG, "→ Subiendo imagen3...")
-                uploadTempImage(imageFile3)
-            } else {
-                Log.d(TAG, "→ Imagen3 no cambió, no se sube")
-                null
-            }
+            val imgD1 = if (imageFile != null && imageFile.exists()) uploadTempImage(imageFile) else null
+            val imgD2 = if (imageFile2 != null && imageFile2.exists()) uploadTempImage(imageFile2) else null
+            val imgD3 = if (imageFile3 != null && imageFile3.exists()) uploadTempImage(imageFile3) else null
 
             val updateData = com.example.kkarhua.data.remote.UpdateProductData(
-                name = name,
-                description = description,
-                price = price,
-                stock = stock,
-                category = category,
-                image = imageData,
-                image2 = imageData2,
-                image3 = imageData3
+                name = name, description = description, price = price,
+                stock = stock, category = category,
+                image = imgD1, image2 = imgD2, image3 = imgD3
             )
 
-            Log.d(TAG, "→ Enviando PATCH con:")
-            Log.d(TAG, "  - image: ${if (imageData != null) "NUEVA" else "SIN CAMBIOS"}")
-            Log.d(TAG, "  - image2: ${if (imageData2 != null) "NUEVA" else "SIN CAMBIOS"}")
-            Log.d(TAG, "  - image3: ${if (imageData3 != null) "NUEVA" else "SIN CAMBIOS"}")
-
-            val response = apiService.updateProduct(
-                id = productId,
-                productData = updateData
-            )
+            val response = apiService.updateProduct(id = productId, productData = updateData)
 
             if (!response.isSuccessful) {
                 val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "✗ Error en PATCH: $errorBody")
                 return Result.failure(Exception("Error ${response.code()}: $errorBody"))
             }
 
-            val productResponse = response.body() ?: return Result.failure(Exception("Response body es null"))
+            val prodRes = response.body() ?: return Result.failure(Exception("Response null"))
 
-            val imageUrl = productResponse.image.getImageUrl()
-            val imageUrl2 = productResponse.image2.getImageUrl()
-            val imageUrl3 = productResponse.image3.getImageUrl()
-
-            Log.d(TAG, "✓ Producto actualizado exitosamente")
-            Log.d(TAG, "  - image1: $imageUrl")
-            Log.d(TAG, "  - image2: $imageUrl2")
-            Log.d(TAG, "  - image3: $imageUrl3")
-            Log.d(TAG, "════════════════════════════════════════")
-
-            val product = Product(
-                id = productResponse.id.toString(),
-                name = productResponse.name,
-                description = productResponse.description,
-                price = productResponse.price,
-                image = imageUrl,
-                image2 = imageUrl2,
-                image3 = imageUrl3,
-                stock = productResponse.stock,
-                category = productResponse.category
+            val prod = Product(
+                id = prodRes.id.toString(),
+                name = prodRes.name,
+                description = prodRes.description,
+                price = prodRes.price,
+                image = prodRes.image.getImageUrl(),
+                image2 = prodRes.image2.getImageUrl(),
+                image3 = prodRes.image3.getImageUrl(),
+                stock = prodRes.stock,
+                category = prodRes.category
             )
-
-            insertProduct(product)
-            Result.success(product)
+            insertProduct(prod)
+            Result.success(prod)
 
         } catch (e: Exception) {
-            Log.e(TAG, "EXCEPCIÓN: ${e.message}", e)
+            Log.e(TAG, "EXCEPCIÓN UPDATE: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -377,7 +342,6 @@ class ProductRepository(private val productDao: ProductDao) {
     suspend fun deleteProductFromApi(productId: Int): Result<Unit> {
         return try {
             val response = apiService.deleteProduct(productId)
-
             if (response.isSuccessful) {
                 deleteProduct(productId.toString())
                 Result.success(Unit)
