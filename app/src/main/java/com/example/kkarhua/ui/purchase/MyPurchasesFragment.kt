@@ -96,7 +96,6 @@ class MyPurchasesFragment : Fragment() {
                     txtEmpty.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
 
-                    // Cargar detalles de cada compra
                     val purchasesWithDetails = purchases.map { purchase ->
                         loadPurchaseDetails(purchase.id, purchase)
                     }
@@ -116,15 +115,12 @@ class MyPurchasesFragment : Fragment() {
         purchaseId: Int,
         purchase: com.example.kkarhua.data.remote.PurchaseResponse
     ): PurchaseWithDetails {
-        // Cargar dirección
         val addressResult = purchaseRepository.getAddressById(purchase.address_id)
         val address = addressResult.getOrNull()
 
-        // Cargar items
         val itemsResult = purchaseRepository.getPurchaseItems(purchaseId)
         val items = itemsResult.getOrNull() ?: emptyList()
 
-        // Cargar nombres de productos
         val itemsWithProducts = items.map { item ->
             val product = productRepository.getProductById(item.product_id.toString())
             com.example.kkarhua.data.remote.PurchaseItemWithProduct(

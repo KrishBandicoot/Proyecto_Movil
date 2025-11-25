@@ -35,7 +35,7 @@ data class PurchaseRequest(
     val user_id: Int,
     val address_id: Int,
     val total_amount: Double,
-    val status: String = "pending" // pending, approved, rejected
+    val status: String = "pending"
 )
 
 data class PurchaseResponse(
@@ -105,27 +105,38 @@ enum class PurchaseStatus(val value: String) {
     }
 }
 
-enum class ChileanRegion(val displayName: String) {
-    ARICA_PARINACOTA("Arica y Parinacota"),
-    TARAPACA("Tarapacá"),
-    ANTOFAGASTA("Antofagasta"),
-    ATACAMA("Atacama"),
-    COQUIMBO("Coquimbo"),
-    VALPARAISO("Valparaíso"),
-    METROPOLITANA("Región Metropolitana"),
-    OHIGGINS("O'Higgins"),
-    MAULE("Maule"),
-    NUBLE("Ñuble"),
-    BIOBIO("Biobío"),
-    ARAUCANIA("Araucanía"),
-    LOS_RIOS("Los Ríos"),
-    LOS_LAGOS("Los Lagos"),
-    AYSEN("Aysén"),
-    MAGALLANES("Magallanes");
+// ============================================
+// REGIONES Y COMUNAS DE CHILE (según Xano)
+// ============================================
+
+enum class ChileanRegion(val displayName: String, val communes: List<String>) {
+    METROPOLITANA("Metropolitana", listOf(
+        "Santiago",
+        "Las Condes",
+        "Maipu"
+    )),
+    VALPARAISO("Valparaiso", listOf(
+        "Valparaiso",
+        "Viña del Mar",
+        "Quillota"
+    )),
+    ARAUCANIA("Araucania", listOf(
+        "Temuco",
+        "Pucon",
+        "Villarica"
+    ));
 
     companion object {
         fun getAllRegions(): List<String> {
             return values().map { it.displayName }
+        }
+
+        fun getCommunesByRegion(regionName: String): List<String> {
+            return values().find { it.displayName == regionName }?.communes ?: emptyList()
+        }
+
+        fun fromDisplayName(name: String): ChileanRegion? {
+            return values().find { it.displayName == name }
         }
     }
 }

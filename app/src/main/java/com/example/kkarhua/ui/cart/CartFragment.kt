@@ -1,158 +1,156 @@
-package com.example.kkarhua.ui.purchase
-
-// NOTA: Si tu carpeta se llama "purcharse", cambia el package a:
-// package com.example.kkarhua.ui.purcharse
+package com.example.kkarhua.ui.cart
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
+import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kkarhua.R
-import com.example.kkarhua.data.remote.PurchaseWithDetails
-import com.example.kkarhua.data.repository.AuthRepository
-import com.example.kkarhua.data.repository.ProductRepository
-import com.example.kkarhua.data.repository.PurchaseRepository
 import com.example.kkarhua.data.local.AppDatabase
-import kotlinx.coroutines.launch
+import com.example.kkarhua.data.local.CartItem
+import com.example.kkarhua.data.repository.AuthRepository
+import com.example.kkarhua.data.repository.CartRepository
+import com.example.kkarhua.viewmodel.CartViewModel
+import com.example.kkarhua.viewmodel.CartViewModelFactory
 
-class MyPurchasesFragment : Fragment() {
+class CartFragment : Fragment() {
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var progressBar: ProgressBar
-    private lateinit var txtEmpty: TextView
+    private lateinit var recyclerCartItems: RecyclerView
+    private lateinit var txtEmptyCart: TextView
+    private lateinit var txtSubtotal: TextView
+    private lateinit var txtIva: TextView
+    private lateinit var txtTotalPrice: TextView
+    private lateinit var btnCheckout: Button
+    private lateinit var cartViewModel: CartViewModel
+    private lateinit var cartAdapter: CartAdapter
     private lateinit var authRepository: AuthRepository
-    private lateinit var purchaseRepository: PurchaseRepository
-    private lateinit var productRepository: ProductRepository
-    private lateinit var purchasesAdapter: PurchasesAdapter
+
+    private val IVA_RATE = 0.19
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_my_purchases, container, false)
+        return inflater.inflate(R.layout.fragment_cart, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        authRepository = AuthRepository(requireContext())
+
         setupViews(view)
-        setupRepositories()
+        setupViewModel()
         setupRecyclerView()
-        loadPurchases()
+        observeCart()
+        setupListeners()
     }
 
     private fun setupViews(view: View) {
-        recyclerView = view.findViewById(R.id.recyclerPurchases)
-        progressBar = view.findViewById(R.id.progressBar)
-        txtEmpty = view.findViewById(R.id.txtEmpty)
+        recyclerCartItems = view.findViewById(R.id.recyclerCartItems)
+        txtEmptyCart = view.findViewById(R.id.txtEmptyCart)
+        txtSubtotal = view.findViewById(R.id.txtSubtotal)
+        txtIva = view.findViewById(R.id.txtIva)
+        txtTotalPrice = view.findViewById(R.id.txtTotalPrice)
+        btnCheckout = view.findViewById(R.id.btnCheckout)
     }
 
-    private fun setupRepositories() {
-        authRepository = AuthRepository(requireContext())
-        purchaseRepository = PurchaseRepository(authRepository)
-
+    private fun setupViewModel() {
         val database = AppDatabase.getInstance(requireContext())
-        productRepository = ProductRepository(database.productDao())
+        val repository = CartRepository(database.cartDao())
+        val factory = CartViewModelFactory(repository)
+        cartViewModel = ViewModelProvider(this, factory).get(CartViewModel::class.java)
     }
 
     private fun setupRecyclerView() {
-        purchasesAdapter = PurchasesAdapter(isAdmin = false)
+        cartAdapter = CartAdapter(
+            onQuantityChanged = { cartItem, newQuantity ->
+                cartViewModel.updateQuantity(cartItem.productId, newQuantity)
+            },
+            onRemoveItem = { cartItem ->
+                cartViewModel.removeFromCart(cartItem.productId)
+                Toast.makeText(
+                    requireContext(),
+                    "${cartItem.productName} eliminado del carrito",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
 
-        recyclerView.apply {
+        recyclerCartItems.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = purchasesAdapter
+            adapter = cartAdapter
         }
     }
 
-    private fun loadPurchases() {
-        progressBar.visibility = View.VISIBLE
-
-        lifecycleScope.launch {
-            try {
-                val userId = getUserId()
-                if (userId == 0) {
-                    showError("Error al obtener usuario")
-                    return@launch
-                }
-
-                val purchasesResult = purchaseRepository.getUserPurchases(userId)
-
-                if (purchasesResult.isFailure) {
-                    showError("Error al cargar compras: ${purchasesResult.exceptionOrNull()?.message}")
-                    return@launch
-                }
-
-                val purchases = purchasesResult.getOrNull() ?: emptyList()
-
-                if (purchases.isEmpty()) {
-                    txtEmpty.visibility = View.VISIBLE
-                    recyclerView.visibility = View.GONE
-                } else {
-                    txtEmpty.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
-
-                    // Cargar detalles de cada compra
-                    val purchasesWithDetails = purchases.map { purchase ->
-                        loadPurchaseDetails(purchase.id, purchase)
-                    }
-
-                    purchasesAdapter.submitList(purchasesWithDetails)
-                }
-
-                progressBar.visibility = View.GONE
-
-            } catch (e: Exception) {
-                showError("Error: ${e.message}")
+    private fun observeCart() {
+        cartViewModel.cartItems.observe(viewLifecycleOwner) { items ->
+            if (items.isEmpty()) {
+                showEmptyCart()
+            } else {
+                showCartItems(items)
             }
         }
-    }
 
-    private suspend fun loadPurchaseDetails(
-        purchaseId: Int,
-        purchase: com.example.kkarhua.data.remote.PurchaseResponse
-    ): PurchaseWithDetails {
-        // Cargar dirección
-        val addressResult = purchaseRepository.getAddressById(purchase.address_id)
-        val address = addressResult.getOrNull()
-
-        // Cargar items
-        val itemsResult = purchaseRepository.getPurchaseItems(purchaseId)
-        val items = itemsResult.getOrNull() ?: emptyList()
-
-        // Cargar nombres de productos
-        val itemsWithProducts = items.map { item ->
-            val product = productRepository.getProductById(item.product_id.toString())
-            com.example.kkarhua.data.remote.PurchaseItemWithProduct(
-                item = item,
-                productName = product?.name ?: "Producto desconocido",
-                productImage = product?.image ?: ""
-            )
+        cartViewModel.totalPrice.observe(viewLifecycleOwner) { total ->
+            updatePriceBreakdown(total)
         }
-
-        return PurchaseWithDetails(
-            purchase = purchase,
-            address = address,
-            items = itemsWithProducts
-        )
     }
 
-    private fun getUserId(): Int {
-        val prefs = requireContext().getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
-        return prefs.getInt("user_id", 0)
+    private fun updatePriceBreakdown(subtotal: Double) {
+        val iva = subtotal * IVA_RATE
+        val total = subtotal + iva
+
+        txtSubtotal.text = "$${subtotal.toInt()}"
+        txtIva.text = "$${iva.toInt()}"
+        txtTotalPrice.text = "$${total.toInt()}"
     }
 
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
-        progressBar.visibility = View.GONE
-        txtEmpty.visibility = View.VISIBLE
-        txtEmpty.text = "Error al cargar compras"
+    private fun showEmptyCart() {
+        recyclerCartItems.visibility = View.GONE
+        txtEmptyCart.visibility = View.VISIBLE
+        btnCheckout.isEnabled = false
+        btnCheckout.alpha = 0.5f
+    }
+
+    private fun showCartItems(items: List<CartItem>) {
+        recyclerCartItems.visibility = View.VISIBLE
+        txtEmptyCart.visibility = View.GONE
+        btnCheckout.isEnabled = true
+        btnCheckout.alpha = 1.0f
+        cartAdapter.submitList(items)
+    }
+
+    private fun setupListeners() {
+        btnCheckout.setOnClickListener {
+            if (!authRepository.isAuthenticated()) {
+                Toast.makeText(
+                    requireContext(),
+                    "⚠️ Debes iniciar sesión para realizar una compra",
+                    Toast.LENGTH_LONG
+                ).show()
+                return@setOnClickListener
+            }
+
+            val items = cartViewModel.cartItems.value
+            if (items.isNullOrEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    "El carrito está vacío",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            findNavController().navigate(R.id.action_cartFragment_to_shippingAddressFragment)
+        }
     }
 }

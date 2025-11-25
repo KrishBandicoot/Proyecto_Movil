@@ -26,7 +26,7 @@ class ShippingAddressFragment : Fragment() {
     private lateinit var etAddressLine: TextInputEditText
     private lateinit var etApartment: TextInputEditText
     private lateinit var spinnerRegion: Spinner
-    private lateinit var etCommune: TextInputEditText
+    private lateinit var spinnerCommune: Spinner
     private lateinit var etInstructions: TextInputEditText
     private lateinit var btnConfirmPurchase: Button
     private lateinit var btnCancel: Button
@@ -61,7 +61,7 @@ class ShippingAddressFragment : Fragment() {
         etAddressLine = view.findViewById(R.id.etAddressLine)
         etApartment = view.findViewById(R.id.etApartment)
         spinnerRegion = view.findViewById(R.id.spinnerRegion)
-        etCommune = view.findViewById(R.id.etCommune)
+        spinnerCommune = view.findViewById(R.id.spinnerCommune)
         etInstructions = view.findViewById(R.id.etInstructions)
         btnConfirmPurchase = view.findViewById(R.id.btnConfirmPurchase)
         btnCancel = view.findViewById(R.id.btnCancel)
@@ -91,6 +91,31 @@ class ShippingAddressFragment : Fragment() {
             regions
         )
         spinnerRegion.adapter = adapter
+
+        // ✅ Listener para actualizar comunas cuando cambia la región
+        spinnerRegion.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedRegion = regions[position]
+                updateCommuneSpinner(selectedRegion)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
+        // Cargar comunas de la primera región por defecto
+        if (regions.isNotEmpty()) {
+            updateCommuneSpinner(regions[0])
+        }
+    }
+
+    private fun updateCommuneSpinner(regionName: String) {
+        val communes = ChileanRegion.getCommunesByRegion(regionName)
+        val adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_dropdown_item,
+            communes
+        )
+        spinnerCommune.adapter = adapter
     }
 
     private fun setupListeners() {
@@ -107,10 +132,9 @@ class ShippingAddressFragment : Fragment() {
         val addressLine = etAddressLine.text.toString().trim()
         val apartment = etApartment.text.toString().trim()
         val region = spinnerRegion.selectedItem.toString()
-        val commune = etCommune.text.toString().trim()
+        val commune = spinnerCommune.selectedItem.toString()
         val instructions = etInstructions.text.toString().trim()
 
-        // Validaciones
         when {
             addressLine.isEmpty() -> {
                 etAddressLine.error = "La dirección es requerida"
@@ -118,8 +142,7 @@ class ShippingAddressFragment : Fragment() {
                 return
             }
             commune.isEmpty() -> {
-                etCommune.error = "La comuna es requerida"
-                etCommune.requestFocus()
+                Toast.makeText(requireContext(), "Selecciona una comuna", Toast.LENGTH_SHORT).show()
                 return
             }
         }
@@ -140,14 +163,23 @@ class ShippingAddressFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // Obtener datos del usuario
-                val userId = authRepository.getUserId()
+                // ✅ FIX: Obtener userId correctamente desde SharedPreferences
+                val prefs = requireContext().getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
+                val userId = prefs.getInt("user_id", 0)
+
+                android.util.Log.d("ShippingAddress", "========================================")
+                android.util.Log.d("ShippingAddress", "DATOS DE COMPRA")
+                android.util.Log.d("ShippingAddress", "========================================")
+                android.util.Log.d("ShippingAddress", "User ID: $userId")
+                android.util.Log.d("ShippingAddress", "Address: $addressLine")
+                android.util.Log.d("ShippingAddress", "Region: $region")
+                android.util.Log.d("ShippingAddress", "Commune: $commune")
+
                 if (userId == 0) {
-                    showError("Error: Usuario no identificado")
+                    showError("Error: Usuario no identificado. Por favor, inicia sesión nuevamente.")
                     return@launch
                 }
 
-                // Obtener items del carrito
                 val cartItems = cartViewModel.cartItems.value
                 if (cartItems.isNullOrEmpty()) {
                     showError("El carrito está vacío")
@@ -158,6 +190,10 @@ class ShippingAddressFragment : Fragment() {
                 val subtotal = cartItems.sumOf { it.price * it.quantity }
                 val iva = subtotal * IVA_RATE
                 val total = subtotal + iva
+
+                android.util.Log.d("ShippingAddress", "Subtotal: $subtotal")
+                android.util.Log.d("ShippingAddress", "IVA: $iva")
+                android.util.Log.d("ShippingAddress", "Total: $total")
 
                 // 1. Crear dirección
                 val addressResult = purchaseRepository.createAddress(
@@ -175,6 +211,7 @@ class ShippingAddressFragment : Fragment() {
                 }
 
                 val address = addressResult.getOrNull()!!
+                android.util.Log.d("ShippingAddress", "✓ Dirección creada: ${address.id}")
 
                 // 2. Crear compra
                 val purchaseResult = purchaseRepository.createPurchase(
@@ -189,6 +226,7 @@ class ShippingAddressFragment : Fragment() {
                 }
 
                 val purchase = purchaseResult.getOrNull()!!
+                android.util.Log.d("ShippingAddress", "✓ Compra creada: ${purchase.id}")
 
                 // 3. Crear items de compra
                 for (cartItem in cartItems) {
@@ -202,23 +240,31 @@ class ShippingAddressFragment : Fragment() {
                     )
 
                     if (itemResult.isFailure) {
-                        android.util.Log.e("Purchase", "Error creating item: ${itemResult.exceptionOrNull()?.message}")
+                        android.util.Log.e("ShippingAddress", "Error creando item: ${itemResult.exceptionOrNull()?.message}")
+                    } else {
+                        android.util.Log.d("ShippingAddress", "✓ Item creado para producto $productId")
                     }
                 }
 
                 // 4. Limpiar carrito
                 cartViewModel.clearCart()
+                android.util.Log.d("ShippingAddress", "✓ Carrito limpiado")
 
                 // 5. Mostrar mensaje y regresar
                 Toast.makeText(
                     requireContext(),
-                    "✓ Compra realizada exitosamente\n\nEstado: Pendiente de aprobación",
+                    "✓ Compra realizada exitosamente\n\n📋 Orden #${purchase.id}\n⏳ Estado: Pendiente de aprobación",
                     Toast.LENGTH_LONG
                 ).show()
+
+                android.util.Log.d("ShippingAddress", "========================================")
+                android.util.Log.d("ShippingAddress", "COMPRA COMPLETADA")
+                android.util.Log.d("ShippingAddress", "========================================")
 
                 findNavController().navigate(R.id.action_shippingAddressFragment_to_cartFragment)
 
             } catch (e: Exception) {
+                android.util.Log.e("ShippingAddress", "✗ Exception: ${e.message}", e)
                 showError("Error inesperado: ${e.message}")
             }
         }
@@ -229,17 +275,5 @@ class ShippingAddressFragment : Fragment() {
         progressBar.visibility = View.GONE
         btnConfirmPurchase.isEnabled = true
         btnConfirmPurchase.text = "Confirmar Compra"
-    }
-}
-
-// ✅ Extensión para obtener user ID
-private fun AuthRepository.getUserId(): Int {
-    return try {
-        // Asumiendo que guardas el user ID en SharedPreferences
-        val prefs = android.content.Context.MODE_PRIVATE
-        val sharedPrefs = android.app.Application().getSharedPreferences("auth_prefs", prefs)
-        sharedPrefs.getInt("user_id", 0)
-    } catch (e: Exception) {
-        0
     }
 }

@@ -105,26 +105,30 @@
             app:layout_constraintTop_toBottomOf="@+id/txtRegionLabel"
             android:layout_marginTop="8dp" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilCommune"
+        <!-- ✅ NUEVO: Spinner para Comuna -->
+        <TextView
+            android:id="@+id/txtCommuneLabel"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="Comuna"
-            app:endIconMode="clear_text"
-            app:errorEnabled="true"
+            android:text="Comuna"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/spinnerRegion"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="16dp" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etCommune"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="text"
-                android:padding="16dp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
+        <Spinner
+            android:id="@+id/spinnerCommune"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:background="@android:drawable/btn_dropdown"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/txtCommuneLabel"
+            android:layout_marginTop="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilInstructions"
@@ -135,7 +139,7 @@
             app:errorEnabled="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilCommune"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerCommune"
             android:layout_marginTop="16dp">
 
             <com.google.android.material.textfield.TextInputEditText
