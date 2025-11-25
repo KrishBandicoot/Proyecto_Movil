@@ -68,15 +68,17 @@ class PurchaseRepository(private val authRepository: AuthRepository) {
             val token = authRepository.getAuthToken()
                 ?: return Result.failure(Exception("No hay sesión activa"))
 
+            // ✅ FIX: Cambiar a "pendiente" (minúscula) según Xano
             val request = PurchaseRequest(
                 user_id = userId,
                 address_id = addressId,
                 total_amount = totalAmount,
-                status = "pending"
+                status = "pendiente"  // ✅ CAMBIADO A MINÚSCULA
             )
 
             Log.d(TAG, "→ Creando compra para user $userId")
             Log.d(TAG, "  Total: $$totalAmount")
+            Log.d(TAG, "  Status enviado: 'pendiente'")
             val response = purchaseService.createPurchase("Bearer $token", request)
 
             if (response.isSuccessful && response.body() != null) {

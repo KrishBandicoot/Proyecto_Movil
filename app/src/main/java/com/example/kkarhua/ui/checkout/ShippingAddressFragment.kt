@@ -1,6 +1,7 @@
 package com.example.kkarhua.ui.checkout
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +21,7 @@ import com.example.kkarhua.viewmodel.CartViewModel
 import com.example.kkarhua.viewmodel.CartViewModelFactory
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 class ShippingAddressFragment : Fragment() {
 
@@ -38,6 +40,7 @@ class ShippingAddressFragment : Fragment() {
     private lateinit var cartViewModel: CartViewModel
 
     private val IVA_RATE = 0.19
+    private val TAG = "ShippingAddress"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -92,7 +95,6 @@ class ShippingAddressFragment : Fragment() {
         )
         spinnerRegion.adapter = adapter
 
-        // ✅ Listener para actualizar comunas cuando cambia la región
         spinnerRegion.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val selectedRegion = regions[position]
@@ -102,7 +104,6 @@ class ShippingAddressFragment : Fragment() {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // Cargar comunas de la primera región por defecto
         if (regions.isNotEmpty()) {
             updateCommuneSpinner(regions[0])
         }
@@ -163,25 +164,35 @@ class ShippingAddressFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                // ✅ FIX: Obtener userId correctamente desde SharedPreferences
                 val prefs = requireContext().getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
                 val userId = prefs.getInt("user_id", 0)
 
-                android.util.Log.d("ShippingAddress", "========================================")
-                android.util.Log.d("ShippingAddress", "DATOS DE COMPRA")
-                android.util.Log.d("ShippingAddress", "========================================")
-                android.util.Log.d("ShippingAddress", "User ID: $userId")
-                android.util.Log.d("ShippingAddress", "Address: $addressLine")
-                android.util.Log.d("ShippingAddress", "Region: $region")
-                android.util.Log.d("ShippingAddress", "Commune: $commune")
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "INICIANDO PROCESO DE COMPRA")
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "User ID: $userId")
+                Log.d(TAG, "Address: $addressLine")
+                Log.d(TAG, "Apartment: $apartment")
+                Log.d(TAG, "Region: $region")
+                Log.d(TAG, "Commune: $commune")
+                Log.d(TAG, "Instructions: $instructions")
 
                 if (userId == 0) {
                     showError("Error: Usuario no identificado. Por favor, inicia sesión nuevamente.")
                     return@launch
                 }
 
-                val cartItems = cartViewModel.cartItems.value
-                if (cartItems.isNullOrEmpty()) {
+                // Obtener items del carrito
+                val database = AppDatabase.getInstance(requireContext())
+                val cartDao = database.cartDao()
+                val cartItems = cartDao.getAllCartItems().first()
+
+                Log.d(TAG, "Items en carrito: ${cartItems.size}")
+                for (item in cartItems) {
+                    Log.d(TAG, "  - ${item.productName} x${item.quantity} = $${item.price}")
+                }
+
+                if (cartItems.isEmpty()) {
                     showError("El carrito está vacío")
                     return@launch
                 }
@@ -191,11 +202,15 @@ class ShippingAddressFragment : Fragment() {
                 val iva = subtotal * IVA_RATE
                 val total = subtotal + iva
 
-                android.util.Log.d("ShippingAddress", "Subtotal: $subtotal")
-                android.util.Log.d("ShippingAddress", "IVA: $iva")
-                android.util.Log.d("ShippingAddress", "Total: $total")
+                Log.d(TAG, "Subtotal: $subtotal")
+                Log.d(TAG, "IVA: $iva")
+                Log.d(TAG, "Total: $total")
 
                 // 1. Crear dirección
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "PASO 1: CREAR DIRECCIÓN")
+                Log.d(TAG, "========================================")
+
                 val addressResult = purchaseRepository.createAddress(
                     addressLine1 = addressLine,
                     apartmentNumber = apartment,
@@ -206,31 +221,79 @@ class ShippingAddressFragment : Fragment() {
                 )
 
                 if (addressResult.isFailure) {
-                    showError("Error al crear dirección: ${addressResult.exceptionOrNull()?.message}")
+                    val error = addressResult.exceptionOrNull()
+                    Log.e(TAG, "✗ Error creando dirección", error)
+                    Log.e(TAG, "Mensaje: ${error?.message}")
+                    showError("Error al crear dirección: ${error?.message}")
                     return@launch
                 }
 
                 val address = addressResult.getOrNull()!!
-                android.util.Log.d("ShippingAddress", "✓ Dirección creada: ${address.id}")
+                Log.d(TAG, "✓ Dirección creada exitosamente")
+                Log.d(TAG, "  ID: ${address.id}")
+                Log.d(TAG, "  address_line_1: ${address.address_line_1}")
+                Log.d(TAG, "  region: ${address.region}")
+                Log.d(TAG, "  commune: ${address.commune}")
 
                 // 2. Crear compra
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "PASO 2: CREAR COMPRA")
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "Parámetros:")
+                Log.d(TAG, "  userId: $userId")
+                Log.d(TAG, "  addressId: ${address.id}")
+                Log.d(TAG, "  totalAmount: $total")
+
                 val purchaseResult = purchaseRepository.createPurchase(
                     userId = userId,
                     addressId = address.id,
                     totalAmount = total
                 )
 
+                Log.d(TAG, "Purchase result isSuccess: ${purchaseResult.isSuccess}")
+                Log.d(TAG, "Purchase result isFailure: ${purchaseResult.isFailure}")
+
                 if (purchaseResult.isFailure) {
-                    showError("Error al crear compra: ${purchaseResult.exceptionOrNull()?.message}")
+                    val error = purchaseResult.exceptionOrNull()
+                    Log.e(TAG, "✗ Error creando compra", error)
+                    Log.e(TAG, "Mensaje completo: ${error?.message}")
+                    Log.e(TAG, "Tipo de error: ${error?.javaClass?.simpleName}")
+                    error?.printStackTrace()
+                    showError("Error al crear compra: ${error?.message}")
                     return@launch
                 }
 
-                val purchase = purchaseResult.getOrNull()!!
-                android.util.Log.d("ShippingAddress", "✓ Compra creada: ${purchase.id}")
+                val purchase = purchaseResult.getOrNull()
+
+                if (purchase == null) {
+                    Log.e(TAG, "✗ Purchase es null después de éxito")
+                    showError("Error: La compra se creó pero no se recibió respuesta")
+                    return@launch
+                }
+
+                Log.d(TAG, "✓ Compra creada exitosamente")
+                Log.d(TAG, "  ID: ${purchase.id}")
+                Log.d(TAG, "  status: ${purchase.status}")
+                Log.d(TAG, "  total_amount: ${purchase.total_amount}")
 
                 // 3. Crear items de compra
-                for (cartItem in cartItems) {
-                    val productId = cartItem.productId.toIntOrNull() ?: continue
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "PASO 3: CREAR ITEMS DE COMPRA")
+                Log.d(TAG, "========================================")
+
+                for ((index, cartItem) in cartItems.withIndex()) {
+                    val productId = cartItem.productId.toIntOrNull()
+
+                    if (productId == null) {
+                        Log.e(TAG, "✗ ProductId inválido en item $index: ${cartItem.productId}")
+                        continue
+                    }
+
+                    Log.d(TAG, "Item ${index + 1}/${cartItems.size}:")
+                    Log.d(TAG, "  purchaseId: ${purchase.id}")
+                    Log.d(TAG, "  productId: $productId")
+                    Log.d(TAG, "  quantity: ${cartItem.quantity}")
+                    Log.d(TAG, "  price: ${cartItem.price}")
 
                     val itemResult = purchaseRepository.createPurchaseItem(
                         purchaseId = purchase.id,
@@ -240,15 +303,20 @@ class ShippingAddressFragment : Fragment() {
                     )
 
                     if (itemResult.isFailure) {
-                        android.util.Log.e("ShippingAddress", "Error creando item: ${itemResult.exceptionOrNull()?.message}")
+                        val error = itemResult.exceptionOrNull()
+                        Log.e(TAG, "✗ Error creando item ${index + 1}", error)
+                        Log.e(TAG, "Mensaje: ${error?.message}")
                     } else {
-                        android.util.Log.d("ShippingAddress", "✓ Item creado para producto $productId")
+                        Log.d(TAG, "✓ Item ${index + 1} creado exitosamente")
                     }
                 }
 
                 // 4. Limpiar carrito
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "PASO 4: LIMPIAR CARRITO")
+                Log.d(TAG, "========================================")
                 cartViewModel.clearCart()
-                android.util.Log.d("ShippingAddress", "✓ Carrito limpiado")
+                Log.d(TAG, "✓ Carrito limpiado")
 
                 // 5. Mostrar mensaje y regresar
                 Toast.makeText(
@@ -257,14 +325,22 @@ class ShippingAddressFragment : Fragment() {
                     Toast.LENGTH_LONG
                 ).show()
 
-                android.util.Log.d("ShippingAddress", "========================================")
-                android.util.Log.d("ShippingAddress", "COMPRA COMPLETADA")
-                android.util.Log.d("ShippingAddress", "========================================")
+                Log.d(TAG, "========================================")
+                Log.d(TAG, "COMPRA COMPLETADA EXITOSAMENTE")
+                Log.d(TAG, "Orden #${purchase.id}")
+                Log.d(TAG, "========================================")
 
                 findNavController().navigate(R.id.action_shippingAddressFragment_to_cartFragment)
 
             } catch (e: Exception) {
-                android.util.Log.e("ShippingAddress", "✗ Exception: ${e.message}", e)
+                Log.e(TAG, "========================================")
+                Log.e(TAG, "EXCEPCIÓN NO CONTROLADA")
+                Log.e(TAG, "========================================")
+                Log.e(TAG, "Tipo: ${e.javaClass.simpleName}")
+                Log.e(TAG, "Mensaje: ${e.message}")
+                Log.e(TAG, "StackTrace completo:")
+                e.printStackTrace()
+                Log.e(TAG, "========================================")
                 showError("Error inesperado: ${e.message}")
             }
         }

@@ -62,18 +62,18 @@ class PurchasesAdapter(
             val format = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
             txtPurchaseDate.text = format.format(date)
 
-            // Estado con color
+            // ✅ Estado con los valores correctos de Xano (minúsculas)
             val statusText = when (purchase.status.lowercase()) {
-                "approved" -> "✅ Aprobada"
-                "rejected" -> "❌ Rechazada"
+                "aprobado" -> "✅ Aprobada"
+                "rechazado" -> "❌ Rechazada"
                 else -> "⏳ Pendiente"
             }
             txtPurchaseStatus.text = statusText
 
             txtPurchaseStatus.setTextColor(
                 when (purchase.status.lowercase()) {
-                    "approved" -> android.graphics.Color.parseColor("#4CAF50")
-                    "rejected" -> android.graphics.Color.parseColor("#F44336")
+                    "aprobado" -> android.graphics.Color.parseColor("#4CAF50")
+                    "rechazado" -> android.graphics.Color.parseColor("#F44336")
                     else -> android.graphics.Color.parseColor("#FF9800")
                 }
             )
@@ -94,8 +94,8 @@ class PurchasesAdapter(
             }
             txtPurchaseItems.text = itemsText
 
-            // Botones de admin
-            if (isAdmin && purchase.status.lowercase() == "pending") {
+            // ✅ Botones de admin solo si está pendiente
+            if (isAdmin && purchase.status.lowercase() == "pendiente") {
                 btnApprove?.visibility = View.VISIBLE
                 btnReject?.visibility = View.VISIBLE
 

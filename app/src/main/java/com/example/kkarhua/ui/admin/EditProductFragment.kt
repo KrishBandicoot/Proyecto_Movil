@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide
 import com.example.kkarhua.R
 import com.example.kkarhua.data.local.AppDatabase
 import com.example.kkarhua.data.local.Product
+import com.example.kkarhua.data.local.ProductCategory
 import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.data.repository.ProductRepository
 import kotlinx.coroutines.Dispatchers
@@ -38,11 +39,11 @@ class EditProductFragment : Fragment() {
     private lateinit var etProductStock: EditText
     private lateinit var spinnerCategory: Spinner
     private lateinit var imgProductPhoto: ImageView
-    private lateinit var imgProductPhoto2: ImageView // ✅ NUEVO
-    private lateinit var imgProductPhoto3: ImageView // ✅ NUEVO
+    private lateinit var imgProductPhoto2: ImageView
+    private lateinit var imgProductPhoto3: ImageView
     private lateinit var btnSelectImage: Button
-    private lateinit var btnSelectImage2: Button // ✅ NUEVO
-    private lateinit var btnSelectImage3: Button // ✅ NUEVO
+    private lateinit var btnSelectImage2: Button
+    private lateinit var btnSelectImage3: Button
     private lateinit var btnUpdateProduct: Button
     private lateinit var btnCancel: Button
     private lateinit var progressBar: ProgressBar
@@ -50,23 +51,15 @@ class EditProductFragment : Fragment() {
     private lateinit var authRepository: AuthRepository
 
     private var selectedImageUri: Uri? = null
-    private var selectedImageUri2: Uri? = null // ✅ NUEVO
-    private var selectedImageUri3: Uri? = null // ✅ NUEVO
+    private var selectedImageUri2: Uri? = null
+    private var selectedImageUri3: Uri? = null
     private var currentProduct: Product? = null
     private var hasImageChanged = false
-    private var hasImage2Changed = false // ✅ NUEVO
-    private var hasImage3Changed = false // ✅ NUEVO
+    private var hasImage2Changed = false
+    private var hasImage3Changed = false
 
-    private val categories = listOf(
-        "Accesorios",
-        "Joyería",
-        "Bisutería",
-        "Textil",
-        "Cerámica",
-        "Madera",
-        "Cuero",
-        "Otro"
-    )
+    // ✅ USAR ENUM DE CATEGORÍAS
+    private val categories = ProductCategory.getAllCategories()
 
     private val getImage = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -144,11 +137,11 @@ class EditProductFragment : Fragment() {
         etProductStock = view.findViewById(R.id.etProductStock)
         spinnerCategory = view.findViewById(R.id.spinnerCategory)
         imgProductPhoto = view.findViewById(R.id.imgProductPhoto)
-        imgProductPhoto2 = view.findViewById(R.id.imgProductPhoto2) // ✅ NUEVO
-        imgProductPhoto3 = view.findViewById(R.id.imgProductPhoto3) // ✅ NUEVO
+        imgProductPhoto2 = view.findViewById(R.id.imgProductPhoto2)
+        imgProductPhoto3 = view.findViewById(R.id.imgProductPhoto3)
         btnSelectImage = view.findViewById(R.id.btnSelectImage)
-        btnSelectImage2 = view.findViewById(R.id.btnSelectImage2) // ✅ NUEVO
-        btnSelectImage3 = view.findViewById(R.id.btnSelectImage3) // ✅ NUEVO
+        btnSelectImage2 = view.findViewById(R.id.btnSelectImage2)
+        btnSelectImage3 = view.findViewById(R.id.btnSelectImage3)
         btnUpdateProduct = view.findViewById(R.id.btnUpdateProduct)
         btnCancel = view.findViewById(R.id.btnCancel)
         progressBar = view.findViewById(R.id.progressBar)
@@ -232,6 +225,7 @@ class EditProductFragment : Fragment() {
         etProductPrice.setText(product.price.toString())
         etProductStock.setText(product.stock.toString())
 
+        // ✅ Seleccionar categoría correctamente
         val categoryPosition = categories.indexOf(product.category)
         if (categoryPosition >= 0) {
             spinnerCategory.setSelection(categoryPosition)
@@ -244,7 +238,7 @@ class EditProductFragment : Fragment() {
             .error(R.drawable.ic_launcher_background)
             .into(imgProductPhoto)
 
-        // ✅ NUEVO: Cargar imagen2 si existe
+        // Cargar imagen2 si existe
         if (product.image2.isNotEmpty()) {
             Glide.with(this)
                 .load(product.image2)
@@ -253,7 +247,7 @@ class EditProductFragment : Fragment() {
                 .into(imgProductPhoto2)
         }
 
-        // ✅ NUEVO: Cargar imagen3 si existe
+        // Cargar imagen3 si existe
         if (product.image3.isNotEmpty()) {
             Glide.with(this)
                 .load(product.image3)
@@ -357,7 +351,6 @@ class EditProductFragment : Fragment() {
                     return@launch
                 }
 
-                // ✅ Crear archivo solo si cambió la imagen principal
                 val imageFile = if (hasImageChanged && selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
                         try {
@@ -368,7 +361,6 @@ class EditProductFragment : Fragment() {
                     }
                 } else null
 
-                // ✅ NUEVO: Crear archivo para imagen2 si cambió
                 val imageFile2 = if (hasImage2Changed && selectedImageUri2 != null) {
                     withContext(Dispatchers.IO) {
                         try {
@@ -379,7 +371,6 @@ class EditProductFragment : Fragment() {
                     }
                 } else null
 
-                // ✅ NUEVO: Crear archivo para imagen3 si cambió
                 val imageFile3 = if (hasImage3Changed && selectedImageUri3 != null) {
                     withContext(Dispatchers.IO) {
                         try {
@@ -398,11 +389,10 @@ class EditProductFragment : Fragment() {
                     stock = stock,
                     category = category,
                     imageFile = imageFile,
-                    imageFile2 = imageFile2, // ✅ NUEVO
-                    imageFile3 = imageFile3  // ✅ NUEVO
+                    imageFile2 = imageFile2,
+                    imageFile3 = imageFile3
                 )
 
-                // ✅ Limpiar archivos temporales
                 imageFile?.let {
                     withContext(Dispatchers.IO) {
                         try {

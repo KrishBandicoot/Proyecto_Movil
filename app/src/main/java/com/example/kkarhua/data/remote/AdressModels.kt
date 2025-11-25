@@ -89,21 +89,25 @@ data class PurchaseItemWithProduct(
 // ENUMS
 // ============================================
 
+// ... resto del archivo ...
+
 enum class PurchaseStatus(val value: String) {
-    PENDING("pending"),
-    APPROVED("approved"),
-    REJECTED("rejected");
+    PENDIENTE("pendiente"),
+    APROBADO("aprobado"),
+    RECHAZADO("rechazado");
 
     companion object {
         fun fromString(value: String?): PurchaseStatus {
             return when (value?.lowercase()) {
-                "approved" -> APPROVED
-                "rejected" -> REJECTED
-                else -> PENDING
+                "aprobado" -> APROBADO
+                "rechazado" -> RECHAZADO
+                else -> PENDIENTE
             }
         }
     }
 }
+
+// ... resto del archivo ...
 
 // ============================================
 // REGIONES Y COMUNAS DE CHILE (según Xano)

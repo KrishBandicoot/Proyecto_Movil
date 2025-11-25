@@ -81,8 +81,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.manageProductsFragment,
                 R.id.editProductFragment,
                 R.id.adminRegisterUserFragment,
-                R.id.manageUsersFragment,  // ✅ NUEVO
-                R.id.editUserFragment       // ✅ NUEVO
+                R.id.manageUsersFragment,
+                R.id.editUserFragment,
+                R.id.adminManagePurchasesFragment,  // ✅ AGREGADO
+                R.id.myPurchasesFragment,
+                R.id.shippingAddressFragment
             )
 
             if (destination.id in hideBottomNavFragments) {

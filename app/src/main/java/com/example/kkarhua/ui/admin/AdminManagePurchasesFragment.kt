@@ -77,10 +77,10 @@ class AdminManagePurchasesFragment : Fragment() {
         purchasesAdapter = PurchasesAdapter(
             isAdmin = true,
             onApprove = { purchaseId ->
-                confirmStatusChange(purchaseId, "approved", "Aprobar")
+                confirmStatusChange(purchaseId, "aprobado", "Aprobar")
             },
             onReject = { purchaseId ->
-                confirmStatusChange(purchaseId, "rejected", "Rechazar")
+                confirmStatusChange(purchaseId, "rechazado", "Rechazar")
             }
         )
 
@@ -109,7 +109,11 @@ class AdminManagePurchasesFragment : Fragment() {
                 val result = purchaseRepository.updatePurchaseStatus(purchaseId, newStatus)
 
                 if (result.isSuccess) {
-                    val statusText = if (newStatus == "approved") "aprobada" else "rechazada"
+                    val statusText = when (newStatus) {
+                        "aprobado" -> "aprobada"
+                        "rechazado" -> "rechazada"
+                        else -> "actualizada"
+                    }
                     Toast.makeText(
                         requireContext(),
                         "✓ Orden #$purchaseId $statusText exitosamente",

@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import com.example.kkarhua.data.local.ProductCategory
 
 class AddProductFragment : Fragment() {
 
@@ -49,16 +50,8 @@ class AddProductFragment : Fragment() {
     private var selectedImageUri2: Uri? = null // ✅ NUEVO
     private var selectedImageUri3: Uri? = null // ✅ NUEVO
 
-    private val categories = listOf(
-        "Accesorios",
-        "Joyería",
-        "Bisutería",
-        "Textil",
-        "Cerámica",
-        "Madera",
-        "Cuero",
-        "Otro"
-    )
+    // Al inicio de la clase, cambia:
+    private val categories = ProductCategory.getAllCategories()
 
     // ✅ ACTUALIZADO: Ahora manejamos 3 imágenes
     private val getImage = registerForActivityResult(
