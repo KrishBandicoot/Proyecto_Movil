@@ -19,7 +19,8 @@ class AdminPanelFragment : Fragment() {
     private lateinit var btnAddProduct: Button
     private lateinit var btnManageProducts: Button
     private lateinit var btnRegisterUser: Button
-    private lateinit var btnManageUsers: Button // ✅ NUEVO
+    private lateinit var btnManageUsers: Button
+    private lateinit var btnManagePurchases: Button // ✅ NUEVO
     private lateinit var btnBackToClient: Button
     private lateinit var authRepository: AuthRepository
 
@@ -36,7 +37,6 @@ class AdminPanelFragment : Fragment() {
 
         authRepository = AuthRepository(requireContext())
 
-        // ✅ Verificar que el usuario es admin
         if (!authRepository.isAdmin()) {
             Toast.makeText(
                 requireContext(),
@@ -57,7 +57,8 @@ class AdminPanelFragment : Fragment() {
         btnAddProduct = view.findViewById(R.id.btnAddProduct)
         btnManageProducts = view.findViewById(R.id.btnManageProducts)
         btnRegisterUser = view.findViewById(R.id.btnRegisterUser)
-        btnManageUsers = view.findViewById(R.id.btnManageUsers) // ✅ NUEVO
+        btnManageUsers = view.findViewById(R.id.btnManageUsers)
+        btnManagePurchases = view.findViewById(R.id.btnManagePurchases) // ✅ NUEVO
         btnBackToClient = view.findViewById(R.id.btnBackToClient)
     }
 
@@ -69,7 +70,8 @@ class AdminPanelFragment : Fragment() {
         btnAddProduct.startAnimation(slideUp)
         btnManageProducts.startAnimation(slideUp)
         btnRegisterUser.startAnimation(slideUp)
-        btnManageUsers.startAnimation(slideUp) // ✅ NUEVO
+        btnManageUsers.startAnimation(slideUp)
+        btnManagePurchases.startAnimation(slideUp) // ✅ NUEVO
         btnBackToClient.startAnimation(slideUp)
     }
 
@@ -89,10 +91,15 @@ class AdminPanelFragment : Fragment() {
             findNavController().navigate(R.id.action_adminPanelFragment_to_adminRegisterUserFragment)
         }
 
-        // ✅ NUEVO: Navegar a gestión de usuarios
         btnManageUsers.setOnClickListener {
             animateButton(it)
             findNavController().navigate(R.id.action_adminPanelFragment_to_manageUsersFragment)
+        }
+
+        // ✅ NUEVO: Navegar a Gestionar Compras
+        btnManagePurchases.setOnClickListener {
+            animateButton(it)
+            findNavController().navigate(R.id.action_adminPanelFragment_to_adminManagePurchasesFragment)
         }
 
         btnBackToClient.setOnClickListener {

@@ -1,7 +1,4 @@
-package com.example.kkarhua.ui.purchase
-
-// NOTA: Si tu carpeta se llama "purcharse", cambia el package a:
-// package com.example.kkarhua.ui.purcharse
+package com.example.kkarhua.ui.admin
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,19 +7,22 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.kkarhua.R
+import com.example.kkarhua.data.local.AppDatabase
 import com.example.kkarhua.data.remote.PurchaseWithDetails
 import com.example.kkarhua.data.repository.AuthRepository
 import com.example.kkarhua.data.repository.ProductRepository
 import com.example.kkarhua.data.repository.PurchaseRepository
-import com.example.kkarhua.data.local.AppDatabase
+import com.example.kkarhua.ui.purchase.PurchasesAdapter
 import kotlinx.coroutines.launch
 
-class MyPurchasesFragment : Fragment() {
+class AdminManagePurchasesFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var progressBar: ProgressBar
@@ -37,11 +37,23 @@ class MyPurchasesFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_my_purchases, container, false)
+        return inflater.inflate(R.layout.fragment_admin_manage_purchases, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        authRepository = AuthRepository(requireContext())
+
+        if (!authRepository.isAdmin()) {
+            Toast.makeText(
+                requireContext(),
+                "⚠️ Acceso denegado: Solo administradores",
+                Toast.LENGTH_LONG
+            ).show()
+            findNavController().navigateUp()
+            return
+        }
 
         setupViews(view)
         setupRepositories()
@@ -56,19 +68,62 @@ class MyPurchasesFragment : Fragment() {
     }
 
     private fun setupRepositories() {
-        authRepository = AuthRepository(requireContext())
         purchaseRepository = PurchaseRepository(authRepository)
-
         val database = AppDatabase.getInstance(requireContext())
         productRepository = ProductRepository(database.productDao())
     }
 
     private fun setupRecyclerView() {
-        purchasesAdapter = PurchasesAdapter(isAdmin = false)
+        purchasesAdapter = PurchasesAdapter(
+            isAdmin = true,
+            onApprove = { purchaseId ->
+                confirmStatusChange(purchaseId, "approved", "Aprobar")
+            },
+            onReject = { purchaseId ->
+                confirmStatusChange(purchaseId, "rejected", "Rechazar")
+            }
+        )
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = purchasesAdapter
+        }
+    }
+
+    private fun confirmStatusChange(purchaseId: Int, newStatus: String, actionName: String) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("$actionName compra")
+            .setMessage("¿Estás seguro de que deseas $actionName la orden #$purchaseId?")
+            .setPositiveButton(actionName) { _, _ ->
+                updatePurchaseStatus(purchaseId, newStatus)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun updatePurchaseStatus(purchaseId: Int, newStatus: String) {
+        progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                val result = purchaseRepository.updatePurchaseStatus(purchaseId, newStatus)
+
+                if (result.isSuccess) {
+                    val statusText = if (newStatus == "approved") "aprobada" else "rechazada"
+                    Toast.makeText(
+                        requireContext(),
+                        "✓ Orden #$purchaseId $statusText exitosamente",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Recargar lista
+                    loadPurchases()
+                } else {
+                    showError("Error al actualizar estado: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                showError("Error: ${e.message}")
+            }
         }
     }
 
@@ -77,13 +132,7 @@ class MyPurchasesFragment : Fragment() {
 
         lifecycleScope.launch {
             try {
-                val userId = getUserId()
-                if (userId == 0) {
-                    showError("Error al obtener usuario")
-                    return@launch
-                }
-
-                val purchasesResult = purchaseRepository.getUserPurchases(userId)
+                val purchasesResult = purchaseRepository.getAllPurchases()
 
                 if (purchasesResult.isFailure) {
                     showError("Error al cargar compras: ${purchasesResult.exceptionOrNull()?.message}")
@@ -99,7 +148,6 @@ class MyPurchasesFragment : Fragment() {
                     txtEmpty.visibility = View.GONE
                     recyclerView.visibility = View.VISIBLE
 
-                    // Cargar detalles de cada compra
                     val purchasesWithDetails = purchases.map { purchase ->
                         loadPurchaseDetails(purchase.id, purchase)
                     }
@@ -119,15 +167,12 @@ class MyPurchasesFragment : Fragment() {
         purchaseId: Int,
         purchase: com.example.kkarhua.data.remote.PurchaseResponse
     ): PurchaseWithDetails {
-        // Cargar dirección
         val addressResult = purchaseRepository.getAddressById(purchase.address_id)
         val address = addressResult.getOrNull()
 
-        // Cargar items
         val itemsResult = purchaseRepository.getPurchaseItems(purchaseId)
         val items = itemsResult.getOrNull() ?: emptyList()
 
-        // Cargar nombres de productos
         val itemsWithProducts = items.map { item ->
             val product = productRepository.getProductById(item.product_id.toString())
             com.example.kkarhua.data.remote.PurchaseItemWithProduct(
@@ -142,11 +187,6 @@ class MyPurchasesFragment : Fragment() {
             address = address,
             items = itemsWithProducts
         )
-    }
-
-    private fun getUserId(): Int {
-        val prefs = requireContext().getSharedPreferences("auth_prefs", android.content.Context.MODE_PRIVATE)
-        return prefs.getInt("user_id", 0)
     }
 
     private fun showError(message: String) {

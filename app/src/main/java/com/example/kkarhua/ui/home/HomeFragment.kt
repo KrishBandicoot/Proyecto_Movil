@@ -18,6 +18,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var btnLogout: Button
     private lateinit var btnAdminPanel: Button
+    private lateinit var btnMyPurchases: Button // ✅ NUEVO
     private lateinit var titleText: TextView
     private lateinit var authRepository: AuthRepository
 
@@ -48,6 +49,7 @@ class HomeFragment : Fragment() {
         titleText = view.findViewById(R.id.titleText)
         btnLogout = view.findViewById(R.id.btnLogout)
         btnAdminPanel = view.findViewById(R.id.btnAdminPanel)
+        btnMyPurchases = view.findViewById(R.id.btnMyPurchases) // ✅ NUEVO
     }
 
     private fun setupAnimations() {
@@ -56,6 +58,7 @@ class HomeFragment : Fragment() {
 
         titleText.startAnimation(fadeIn)
         btnLogout.startAnimation(slideUp)
+        btnMyPurchases.startAnimation(slideUp) // ✅ NUEVO
 
         if (authRepository.isAdmin()) {
             btnAdminPanel.startAnimation(slideUp)
@@ -71,6 +74,12 @@ class HomeFragment : Fragment() {
         btnAdminPanel.setOnClickListener {
             animateButtonClick(it)
             findNavController().navigate(R.id.action_homeFragment_to_adminPanelFragment)
+        }
+
+        // ✅ NUEVO: Navegar a Mis Compras
+        btnMyPurchases.setOnClickListener {
+            animateButtonClick(it)
+            findNavController().navigate(R.id.action_homeFragment_to_myPurchasesFragment)
         }
     }
 
@@ -108,12 +117,11 @@ class HomeFragment : Fragment() {
             Toast.LENGTH_SHORT
         ).show()
 
-        // ✅ Navegar a splash y limpiar TODO el back stack
         findNavController().navigate(
             R.id.splashFragment,
             null,
             androidx.navigation.NavOptions.Builder()
-                .setPopUpTo(R.id.nav_graph, true) // Limpia todo el back stack
+                .setPopUpTo(R.id.nav_graph, true)
                 .build()
         )
     }

@@ -1,8 +1,5 @@
 package com.example.kkarhua.ui.purchase
 
-// NOTA: Si tu carpeta se llama "purcharse", cambia el package a:
-// package com.example.kkarhua.ui.purcharse
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View

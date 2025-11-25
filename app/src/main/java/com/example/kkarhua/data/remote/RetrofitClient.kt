@@ -8,10 +8,13 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // ✅ CORREGIDO: 3 endpoints separados
+    // ✅ ENDPOINTS SEPARADOS
     private const val BASE_URL_PRODUCTS = "https://x8ki-letl-twmt.n7.xano.io/api:2bSFBtEo/"
     private const val BASE_URL_AUTH = "https://x8ki-letl-twmt.n7.xano.io/api:YeqJmQI7/"
     private const val BASE_URL_USERS = "https://x8ki-letl-twmt.n7.xano.io/api:abImCnIy/"
+    private const val BASE_URL_ADDRESS = "https://x8ki-letl-twmt.n7.xano.io/api:I6D05L_b/"
+    private const val BASE_URL_PURCHASE = "https://x8ki-letl-twmt.n7.xano.io/api:z-bs0IRt/"
+    private const val BASE_URL_PURCHASE_ITEM = "https://x8ki-letl-twmt.n7.xano.io/api:G3c9N9A7/"
 
     private val okHttpClient: OkHttpClient by lazy {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -43,10 +46,36 @@ object RetrofitClient {
             .build()
     }
 
-    // ✅ NUEVO: Retrofit para gestión de usuarios
     private val retrofitUsers: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL_USERS)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // ✅ NUEVO: Retrofit para Address
+    private val retrofitAddress: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_ADDRESS)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // ✅ NUEVO: Retrofit para Purchase
+    private val retrofitPurchase: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_PURCHASE)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // ✅ NUEVO: Retrofit para Purchase Item
+    private val retrofitPurchaseItem: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL_PURCHASE_ITEM)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -60,8 +89,20 @@ object RetrofitClient {
         retrofitAuth.create(AuthService::class.java)
     }
 
-    // ✅ CORREGIDO: UserService ahora usa el endpoint correcto
     val userService: UserService by lazy {
         retrofitUsers.create(UserService::class.java)
+    }
+
+    // ✅ NUEVO: Servicios de compras
+    val addressService: PurchaseService by lazy {
+        retrofitAddress.create(PurchaseService::class.java)
+    }
+
+    val purchaseService: PurchaseService by lazy {
+        retrofitPurchase.create(PurchaseService::class.java)
+    }
+
+    val purchaseItemService: PurchaseService by lazy {
+        retrofitPurchaseItem.create(PurchaseService::class.java)
     }
 }

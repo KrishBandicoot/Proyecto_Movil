@@ -11,18 +11,10 @@
         android:label="Bienvenida">
         <action
             android:id="@+id/action_splashFragment_to_loginFragment"
-            app:destination="@id/loginFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/loginFragment" />
         <action
             android:id="@+id/action_splashFragment_to_registerFragment"
-            app:destination="@id/registerFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/registerFragment" />
         <action
             android:id="@+id/action_splashFragment_to_homeFragment"
             app:destination="@id/homeFragment"
@@ -37,38 +29,32 @@
         android:label="Inicio">
         <action
             android:id="@+id/action_homeFragment_to_productListFragment"
-            app:destination="@id/productListFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/productListFragment" />
         <action
             android:id="@+id/action_homeFragment_to_loginFragment"
-            app:destination="@id/loginFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/loginFragment" />
         <action
             android:id="@+id/action_homeFragment_to_registerFragment"
-            app:destination="@id/registerFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/registerFragment" />
         <action
             android:id="@+id/action_homeFragment_to_adminPanelFragment"
-            app:destination="@id/adminPanelFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/adminPanelFragment" />
         <action
             android:id="@+id/action_homeFragment_to_splashFragment"
             app:destination="@id/splashFragment"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
+        <!-- ✅ NUEVO: Navegar a Mis Compras -->
+        <action
+            android:id="@+id/action_homeFragment_to_myPurchasesFragment"
+            app:destination="@id/myPurchasesFragment" />
     </fragment>
+
+    <!-- ✅ NUEVO: Mis Compras Fragment -->
+    <fragment
+        android:id="@+id/myPurchasesFragment"
+        android:name="com.example.kkarhua.ui.purchase.MyPurchasesFragment"
+        android:label="Mis Compras" />
 
     <!-- Admin Panel Fragment -->
     <fragment
@@ -77,11 +63,7 @@
         android:label="Panel de Administrador">
         <action
             android:id="@+id/action_adminPanelFragment_to_addProductFragment"
-            app:destination="@id/addProductFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/addProductFragment" />
         <action
             android:id="@+id/action_adminPanelFragment_to_homeFragment"
             app:destination="@id/homeFragment"
@@ -89,26 +71,24 @@
             app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_adminPanelFragment_to_manageProductsFragment"
-            app:destination="@id/manageProductsFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/manageProductsFragment" />
         <action
             android:id="@+id/action_adminPanelFragment_to_adminRegisterUserFragment"
-            app:destination="@id/adminRegisterUserFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/adminRegisterUserFragment" />
         <action
             android:id="@+id/action_adminPanelFragment_to_manageUsersFragment"
-            app:destination="@id/manageUsersFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/manageUsersFragment" />
+        <!-- ✅ NUEVO: Navegar a Gestionar Compras -->
+        <action
+            android:id="@+id/action_adminPanelFragment_to_adminManagePurchasesFragment"
+            app:destination="@id/adminManagePurchasesFragment" />
     </fragment>
+
+    <!-- ✅ NUEVO: Admin Manage Purchases Fragment -->
+    <fragment
+        android:id="@+id/adminManagePurchasesFragment"
+        android:name="com.example.kkarhua.ui.admin.AdminManagePurchasesFragment"
+        android:label="Gestionar Compras" />
 
     <!-- Admin Register User Fragment -->
     <fragment
@@ -123,11 +103,7 @@
         android:label="Gestionar Productos">
         <action
             android:id="@+id/action_manageProductsFragment_to_editProductFragment"
-            app:destination="@id/editProductFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/editProductFragment" />
     </fragment>
 
     <!-- Edit Product Fragment -->
@@ -147,11 +123,7 @@
         android:label="Gestionar Usuarios">
         <action
             android:id="@+id/action_manageUsersFragment_to_editUserFragment"
-            app:destination="@id/editUserFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/editUserFragment" />
     </fragment>
 
     <!-- Edit User Fragment -->
@@ -171,11 +143,7 @@
         android:label="Productos">
         <action
             android:id="@+id/action_productListFragment_to_productDetailFragment"
-            app:destination="@id/productDetailFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
+            app:destination="@id/productDetailFragment" />
         <action
             android:id="@+id/action_productListFragment_to_cartFragment"
             app:destination="@id/cartFragment" />
@@ -201,7 +169,24 @@
     <fragment
         android:id="@+id/cartFragment"
         android:name="com.example.kkarhua.ui.cart.CartFragment"
-        android:label="Carrito" />
+        android:label="Carrito">
+        <!-- ✅ NUEVO: Navegar a Shipping Address -->
+        <action
+            android:id="@+id/action_cartFragment_to_shippingAddressFragment"
+            app:destination="@id/shippingAddressFragment" />
+    </fragment>
+
+    <!-- ✅ NUEVO: Shipping Address Fragment -->
+    <fragment
+        android:id="@+id/shippingAddressFragment"
+        android:name="com.example.kkarhua.ui.checkout.ShippingAddressFragment"
+        android:label="Dirección de Envío">
+        <action
+            android:id="@+id/action_shippingAddressFragment_to_cartFragment"
+            app:destination="@id/cartFragment"
+            app:popUpTo="@id/cartFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <!-- Login Fragment -->
     <fragment
