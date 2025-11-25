@@ -216,6 +216,7 @@ class ProductRepository(private val productDao: ProductDao) {
     }
 
     // ✅ ACTUALIZADO: Ahora acepta imageFile2 e imageFile3
+    // ✅ ACTUALIZADO: Función completa updateProductInApi en ProductRepository.kt
     suspend fun updateProductInApi(
         productId: Int,
         name: String,
@@ -224,8 +225,8 @@ class ProductRepository(private val productDao: ProductDao) {
         stock: Int,
         category: String,
         imageFile: File?,
-        imageFile2: File? = null, // ✅ NUEVO
-        imageFile3: File? = null   // ✅ NUEVO
+        imageFile2: File? = null,
+        imageFile3: File? = null
     ): Result<Product> {
         return try {
             Log.d(TAG, "════════════════════════════════════════")
@@ -285,18 +286,30 @@ class ProductRepository(private val productDao: ProductDao) {
                 return null
             }
 
-            // ✅ Subir imágenes si hay cambios
+            // ✅ SOLUCIÓN: Solo subir las imágenes que cambiaron
             val imageData = if (imageFile != null && imageFile.exists()) {
+                Log.d(TAG, "→ Subiendo imagen1...")
                 uploadTempImage(imageFile)
-            } else null
+            } else {
+                Log.d(TAG, "→ Imagen1 no cambió, no se sube")
+                null
+            }
 
             val imageData2 = if (imageFile2 != null && imageFile2.exists()) {
+                Log.d(TAG, "→ Subiendo imagen2...")
                 uploadTempImage(imageFile2)
-            } else null
+            } else {
+                Log.d(TAG, "→ Imagen2 no cambió, no se sube")
+                null
+            }
 
             val imageData3 = if (imageFile3 != null && imageFile3.exists()) {
+                Log.d(TAG, "→ Subiendo imagen3...")
                 uploadTempImage(imageFile3)
-            } else null
+            } else {
+                Log.d(TAG, "→ Imagen3 no cambió, no se sube")
+                null
+            }
 
             val updateData = com.example.kkarhua.data.remote.UpdateProductData(
                 name = name,
@@ -305,9 +318,14 @@ class ProductRepository(private val productDao: ProductDao) {
                 stock = stock,
                 category = category,
                 image = imageData,
-                image2 = imageData2, // ✅ NUEVO
-                image3 = imageData3  // ✅ NUEVO
+                image2 = imageData2,
+                image3 = imageData3
             )
+
+            Log.d(TAG, "→ Enviando PATCH con:")
+            Log.d(TAG, "  - image: ${if (imageData != null) "NUEVA" else "SIN CAMBIOS"}")
+            Log.d(TAG, "  - image2: ${if (imageData2 != null) "NUEVA" else "SIN CAMBIOS"}")
+            Log.d(TAG, "  - image3: ${if (imageData3 != null) "NUEVA" else "SIN CAMBIOS"}")
 
             val response = apiService.updateProduct(
                 id = productId,
@@ -316,6 +334,7 @@ class ProductRepository(private val productDao: ProductDao) {
 
             if (!response.isSuccessful) {
                 val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "✗ Error en PATCH: $errorBody")
                 return Result.failure(Exception("Error ${response.code()}: $errorBody"))
             }
 
@@ -323,8 +342,14 @@ class ProductRepository(private val productDao: ProductDao) {
                 ?: return Result.failure(Exception("Response body es null"))
 
             val imageUrl = productResponse.image.getImageUrl()
-            val imageUrl2 = productResponse.image2.getImageUrl() // ✅ NUEVO
-            val imageUrl3 = productResponse.image3.getImageUrl() // ✅ NUEVO
+            val imageUrl2 = productResponse.image2.getImageUrl()
+            val imageUrl3 = productResponse.image3.getImageUrl()
+
+            Log.d(TAG, "✓ Producto actualizado exitosamente")
+            Log.d(TAG, "  - image1: $imageUrl")
+            Log.d(TAG, "  - image2: $imageUrl2")
+            Log.d(TAG, "  - image3: $imageUrl3")
+            Log.d(TAG, "════════════════════════════════════════")
 
             val product = Product(
                 id = productResponse.id.toString(),
@@ -332,8 +357,8 @@ class ProductRepository(private val productDao: ProductDao) {
                 description = productResponse.description,
                 price = productResponse.price,
                 image = imageUrl,
-                image2 = imageUrl2, // ✅ NUEVO
-                image3 = imageUrl3, // ✅ NUEVO
+                image2 = imageUrl2,
+                image3 = imageUrl3,
                 stock = productResponse.stock,
                 category = productResponse.category
             )

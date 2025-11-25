@@ -55,7 +55,6 @@ class EditProductFragment : Fragment() {
     private var selectedImageUri3: Uri? = null
     private var currentProduct: Product? = null
 
-    // ✅ Ya no necesitamos las banderas hasImageChanged
     private val categories = ProductCategory.getAllCategories()
 
     private val getImage = registerForActivityResult(
@@ -317,7 +316,6 @@ class EditProductFragment : Fragment() {
         }
     }
 
-    // ✅ SOLUCIÓN COMPLETA: Función updateProductInXano corregida
     private fun updateProductInXano(
         name: String,
         description: String,
@@ -356,7 +354,7 @@ class EditProductFragment : Fragment() {
                 android.util.Log.d("EditProduct", "selectedImageUri3: ${selectedImageUri3 != null}")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
 
-                // ✅ FIX: Solo crear archivo si el usuario seleccionó una nueva imagen
+                // ✅ SOLUCIÓN: Solo crear archivos para las imágenes que el usuario cambió
                 val imageFile = if (selectedImageUri != null) {
                     withContext(Dispatchers.IO) {
                         try {
@@ -393,9 +391,9 @@ class EditProductFragment : Fragment() {
                 android.util.Log.d("EditProduct", "════════════════════════════════")
                 android.util.Log.d("EditProduct", "ARCHIVOS CREADOS")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
-                android.util.Log.d("EditProduct", "imageFile: ${imageFile?.name ?: "NULL"} (${imageFile?.length() ?: 0} bytes)")
-                android.util.Log.d("EditProduct", "imageFile2: ${imageFile2?.name ?: "NULL"} (${imageFile2?.length() ?: 0} bytes)")
-                android.util.Log.d("EditProduct", "imageFile3: ${imageFile3?.name ?: "NULL"} (${imageFile3?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "imageFile: ${imageFile?.name ?: "NULL (no cambió)"} (${imageFile?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "imageFile2: ${imageFile2?.name ?: "NULL (no cambió)"} (${imageFile2?.length() ?: 0} bytes)")
+                android.util.Log.d("EditProduct", "imageFile3: ${imageFile3?.name ?: "NULL (no cambió)"} (${imageFile3?.length() ?: 0} bytes)")
                 android.util.Log.d("EditProduct", "════════════════════════════════")
 
                 val result = productRepository.updateProductInApi(
