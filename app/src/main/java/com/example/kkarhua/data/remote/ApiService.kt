@@ -23,8 +23,8 @@ interface ApiService {
         @Part("stock") stock: RequestBody,
         @Part("category") category: RequestBody,
         @Part image: MultipartBody.Part,
-        @Part image2: MultipartBody.Part?, // ✅ NUEVO: Imagen 2 (opcional)
-        @Part image3: MultipartBody.Part?  // ✅ NUEVO: Imagen 3 (opcional)
+        @Part image2: MultipartBody.Part?, // ✅ Permitir nulo para la subida de una sola imagen
+        @Part image3: MultipartBody.Part?  // ✅ Permitir nulo para la subida de una sola imagen
     ): Response<ProductResponse>
 
     @PATCH("product/{id}")
@@ -38,7 +38,7 @@ interface ApiService {
     suspend fun deleteProduct(@Path("id") id: Int): Response<Unit>
 }
 
-// ✅ Data class para actualizar productos
+// Data class para actualizar productos (rest of the file remains unchanged)
 data class UpdateProductData(
     val name: String,
     val description: String,
@@ -49,6 +49,7 @@ data class UpdateProductData(
     val image2: ImageUpdateData? = null, // ✅ NUEVO
     val image3: ImageUpdateData? = null  // ✅ NUEVO
 )
+// ... (rest of the file remains unchanged)
 
 data class ImageUpdateData(
     val path: String,
